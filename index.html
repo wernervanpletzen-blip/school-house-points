@@ -5,20 +5,25 @@
     <title>School House Points</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- Theme color (address bar color) -->
+    <meta name="theme-color" content="#064420" />
+
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css" />
 
-    <!-- Firebase (compat version, works without build tools) -->
+    <!-- Firebase (compat version, works without Node/npm) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   </head>
+
   <body>
     <div class="app-shell">
       <header class="app-header">
-        <div class="app-header-title">
-          School House Points
-        </div>
+        <div class="app-header-title">School House Points</div>
         <div class="header-right" id="headerUserInfo"></div>
       </header>
 
@@ -95,9 +100,7 @@
             </div>
 
             <div id="learnerRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">
-              Register learner
-            </button>
+            <button class="btn btn-primary mt-2" type="submit">Register learner</button>
           </form>
 
           <!-- Teacher registration form -->
@@ -121,9 +124,7 @@
               <input class="input" id="teacherPassword" type="password" required />
             </div>
             <div id="teacherRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">
-              Register teacher
-            </button>
+            <button class="btn btn-primary mt-2" type="submit">Register teacher</button>
           </form>
         </section>
 
@@ -134,7 +135,7 @@
 
           <h3 class="mt-2">Active events</h3>
           <p class="card-subtitle">
-            Please go to your teacher to be checked in for events. You cannot check yourself in.
+            Please go to your teacher to be checked in for events.
           </p>
 
           <table class="table" id="learnerEventsTable">
@@ -163,7 +164,7 @@
             <button class="btn btn-ghost" id="logoutButton">Log out</button>
           </div>
 
-          <!-- Teacher: Events -->
+          <!-- EVENT CREATION -->
           <div class="mt-2" id="teacherEventsPanel">
             <h3>Create event</h3>
             <form class="form-grid mt-1" id="createEventForm">
@@ -177,9 +178,7 @@
                   <input class="input" id="eventDate" type="date" required />
                 </div>
               </div>
-              <button class="btn btn-primary mt-1" type="submit">
-                Add event (draft)
-              </button>
+              <button class="btn btn-primary mt-1" type="submit">Add event (draft)</button>
             </form>
 
             <h3 class="mt-2">All events</h3>
@@ -196,18 +195,21 @@
             </table>
           </div>
 
-          <!-- Teacher: Check-in -->
+          <!-- CHECK-IN -->
           <div class="mt-2 hidden" id="teacherCheckInPanel">
             <h3>Check-in learners</h3>
+
             <div class="flex mt-1">
               <div style="flex: 2">
                 <div class="label">Event</div>
                 <select class="select" id="checkInEventSelect"></select>
               </div>
+
               <div style="flex: 1">
                 <div class="label">Filter grade</div>
                 <input class="input" id="filterGrade" placeholder="e.g. 4" />
               </div>
+
               <div style="flex: 1">
                 <div class="label">Filter house</div>
                 <select class="select" id="filterHouse">
@@ -217,9 +219,11 @@
                 </select>
               </div>
             </div>
+
             <p class="card-subtitle mt-1">
-              Tap "Check in" for each learner who attends. Each check-in = 1 point for that learner's house.
+              Tap "Check in" for each learner.
             </p>
+
             <table class="table" id="checkInLearnersTable">
               <thead>
                 <tr>
@@ -233,18 +237,17 @@
             </table>
           </div>
 
-          <!-- Teacher: House points -->
+          <!-- HOUSE POINTS -->
           <div class="mt-2 hidden" id="teacherPointsPanel">
             <h3>House points (secret)</h3>
-            <p class="card-subtitle">
-              These totals are hidden from learners. Use them to track the competition.
-            </p>
+            <p class="card-subtitle">These totals are hidden from learners.</p>
 
             <div class="house-points">
               <div class="house-card">
                 <h4>House A</h4>
                 <div class="points" id="houseAPoints">0</div>
               </div>
+
               <div class="house-card">
                 <h4>House B</h4>
                 <div class="points" id="houseBPoints">0</div>
@@ -252,10 +255,22 @@
             </div>
           </div>
         </section>
+
       </main>
     </div>
 
-    <!-- Your app logic -->
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("pwabuilder-sw.js")
+            .catch((err) => console.log("Service Worker registration failed:", err));
+        });
+      }
+    </script>
+
+    <!-- App logic -->
     <script src="app.js"></script>
   </body>
 </html>
