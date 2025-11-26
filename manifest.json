@@ -1,0 +1,12 @@
+{
+  "background_color": "#021309",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "LA HUISE",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "LA HUISE",
+  "start_url": "/",
+  "theme_color": "#064420",
+  "description": "Kry jou huis se punte. Nou!"
+}
