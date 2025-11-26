@@ -3,18 +3,32 @@
 // TODO: replace with your Firebase config
 // (from Firebase console → Project settings → Your apps → Web app)
 const firebaseConfig = {
-    apiKey: "AIzaSyCTh8EPbEHbwj-dY2wClMUfuo551wZODgs",
-    authDomain: "school-house-points-de0a0.firebaseapp.com",
-    projectId: "school-house-points-de0a0",
-    storageBucket: "school-house-points-de0a0.firebasestorage.app",
-    messagingSenderId: "557412828404",
-    appId: "1:557412828404:web:d7a8f300780df81b6f4aa1"
-  };
+  apiKey: "YOUR_API_KEY_HERE",
+  authDomain: "YOUR_AUTH_DOMAIN_HERE",
+  projectId: "YOUR_PROJECT_ID_HERE",
+  // You can include storageBucket, messagingSenderId, appId as given by Firebase
+  // storageBucket: "...",
+  // messagingSenderId: "...",
+  // appId: "..."
+};
 
 // Initialise Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// House metadata: change displayName to your real house names
+// and make sure logos exist with those file names in your repo.
+const HOUSES = {
+  houseA: {
+    displayName: "House 1",       // e.g. "Lions"
+    logo: "house-a-logo.png",
+  },
+  houseB: {
+    displayName: "House 2",       // e.g. "Eagles"
+    logo: "house-b-logo.png",
+  },
+};
 
 // Globals to track logged-in user profile
 let currentUser = null;      // Firebase auth user
@@ -38,7 +52,9 @@ function showAuthForm(form) {
   const learnerForm = document.getElementById("learnerRegisterForm");
   const teacherForm = document.getElementById("teacherRegisterForm");
 
-  [loginForm, learnerForm, teacherForm].forEach((f) => f.classList.add("hidden"));
+  [loginForm, learnerForm, teacherForm].forEach((f) =>
+    f.classList.add("hidden")
+  );
   if (form === "login") loginForm.classList.remove("hidden");
   if (form === "learner") learnerForm.classList.remove("hidden");
   if (form === "teacher") teacherForm.classList.remove("hidden");
@@ -68,7 +84,9 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   currentProfile = { id: snap.id, ...snap.data() };
-  headerInfoEl.textContent = `${currentProfile.role === "teacher" ? "Teacher" : "Learner"}: ${currentProfile.name} ${currentProfile.surname}`;
+  headerInfoEl.textContent = `${
+    currentProfile.role === "teacher" ? "Teacher" : "Learner"
+  }: ${currentProfile.name} ${currentProfile.surname}`;
 
   if (currentProfile.role === "learner") {
     showSection("learnerDashboard");
@@ -86,12 +104,20 @@ auth.onAuthStateChanged(async (user) => {
 
 window.addEventListener("load", () => {
   // Auth tab buttons
-  document.getElementById("showLogin").addEventListener("click", () => showAuthForm("login"));
-  document.getElementById("showLearnerRegister").addEventListener("click", () => showAuthForm("learner"));
-  document.getElementById("showTeacherRegister").addEventListener("click", () => showAuthForm("teacher"));
+  document
+    .getElementById("showLogin")
+    .addEventListener("click", () => showAuthForm("login"));
+  document
+    .getElementById("showLearnerRegister")
+    .addEventListener("click", () => showAuthForm("learner"));
+  document
+    .getElementById("showTeacherRegister")
+    .addEventListener("click", () => showAuthForm("teacher"));
 
   // Forms
-  document.getElementById("loginForm").addEventListener("submit", loginHandler);
+  document
+    .getElementById("loginForm")
+    .addEventListener("submit", loginHandler);
   document
     .getElementById("learnerRegisterForm")
     .addEventListener("submit", learnerRegisterHandler);
@@ -100,12 +126,20 @@ window.addEventListener("load", () => {
     .addEventListener("submit", teacherRegisterHandler);
 
   // Teacher tabs
-  document.getElementById("tabEvents").addEventListener("click", () => showTeacherPanel("events"));
-  document.getElementById("tabCheckIn").addEventListener("click", () => showTeacherPanel("checkin"));
-  document.getElementById("tabPoints").addEventListener("click", () => showTeacherPanel("points"));
+  document
+    .getElementById("tabEvents")
+    .addEventListener("click", () => showTeacherPanel("events"));
+  document
+    .getElementById("tabCheckIn")
+    .addEventListener("click", () => showTeacherPanel("checkin"));
+  document
+    .getElementById("tabPoints")
+    .addEventListener("click", () => showTeacherPanel("points"));
 
   // Logout
-  document.getElementById("logoutButton").addEventListener("click", () => auth.signOut());
+  document
+    .getElementById("logoutButton")
+    .addEventListener("click", () => auth.signOut());
 
   // Teacher event & check-in form listeners
   document
@@ -196,14 +230,26 @@ async function teacherRegisterHandler(e) {
 async function loadLearnerDashboard() {
   if (!currentProfile) return;
 
-  // Fill learner info
   const infoEl = document.getElementById("learnerInfo");
+  const house = HOUSES[currentProfile.houseId] || HOUSES.houseA;
+
+  // Header with house logo + learner name + grade + house name
   infoEl.innerHTML = `
-    <span class="badge-house">Grade ${currentProfile.grade || "?"}</span>
-    &nbsp;|&nbsp;
-    <span class="badge-house">
-      House: <strong>${currentProfile.houseId === "houseA" ? "House A" : "House B"}</strong>
-    </span>
+    <div class="learner-header">
+      <img
+        src="${house.logo}"
+        alt="${house.displayName} logo"
+        class="house-logo"
+      />
+      <div class="learner-header-text">
+        <div class="learner-name">
+          ${currentProfile.name || ""} ${currentProfile.surname || ""}
+        </div>
+        <div class="learner-meta">
+          Grade ${currentProfile.grade || "?"} • ${house.displayName}
+        </div>
+      </div>
+    </div>
   `;
 
   // Get active events
@@ -364,8 +410,10 @@ async function loadTeacherCheckIn() {
     await populateCheckInEventSelect();
   }
   const eventId = eventSelect.value;
+  const tbody = document.querySelector("#checkInLearnersTable tbody");
+
   if (!eventId) {
-    document.querySelector("#checkInLearnersTable tbody").innerHTML =
+    tbody.innerHTML =
       "<tr><td colspan='4'>No active events. Please release an event first.</td></tr>";
     return;
   }
@@ -374,8 +422,10 @@ async function loadTeacherCheckIn() {
   const filterHouse = document.getElementById("filterHouse").value;
 
   // Load all learners
-  let learnersQuery = db.collection("users").where("role", "==", "learner");
-  const learnersSnap = await learnersQuery.get();
+  const learnersSnap = await db
+    .collection("users")
+    .where("role", "==", "learner")
+    .get();
   let learners = learnersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
   if (filterGrade) {
@@ -392,17 +442,28 @@ async function loadTeacherCheckIn() {
     .get();
   const attendance = attSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-  const tbody = document.querySelector("#checkInLearnersTable tbody");
   tbody.innerHTML = "";
 
   learners.forEach((l) => {
     const checked = attendance.some((a) => a.learnerId === l.id);
     const tr = document.createElement("tr");
     tr.classList.add("table-row-clickable");
+
+    const house = HOUSES[l.houseId] || HOUSES.houseA;
+
     tr.innerHTML = `
       <td>${l.name} ${l.surname}</td>
       <td>${l.grade || ""}</td>
-      <td>${l.houseId === "houseA" ? "House A" : "House B"}</td>
+      <td>
+        <span class="house-cell">
+          <img
+            src="${house.logo}"
+            alt="${house.displayName} logo"
+            class="house-logo-small"
+          />
+          <span>${house.displayName}</span>
+        </span>
+      </td>
       <td>
         ${
           checked
