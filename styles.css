@@ -1,0 +1,257 @@
+:root {
+  --bottle-green: #064420;
+  --bottle-green-dark: #032413;
+  --gold: #d4af37;
+  --gold-soft: #f3e2a9;
+  --bg-dark: #021309;
+  --text-light: #f8f8f8;
+  --card-bg: #0b2616;
+  --error: #ff6b6b;
+  --muted: #a7b4a4;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #0b2a19, #020804);
+  color: var(--text-light);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: linear-gradient(90deg, var(--bottle-green-dark), var(--bottle-green));
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.app-header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.header-right {
+  font-size: 0.8rem;
+  color: #ddd;
+}
+
+.app-main {
+  flex: 1;
+  padding: 2rem 1rem 3rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+  color: var(--gold);
+}
+
+.card-subtitle {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--muted);
+}
+
+.btn {
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), #f5d777);
+  color: #1a1200;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(212, 175, 55, 0.6);
+}
+
+.btn-ghost:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(167, 180, 164, 0.5);
+  background: rgba(1, 8, 4, 0.7);
+  color: var(--text-light);
+}
+
+.input:focus,
+.select:focus {
+  outline: 1px solid var(--gold);
+  border-color: var(--gold);
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.8rem;
+}
+
+.flex {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mt-1 {
+  margin-top: 0.75rem;
+}
+
+.mt-2 {
+  margin-top: 1.25rem;
+}
+
+.mt-3 {
+  margin-top: 1.75rem;
+}
+
+.badge-house {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.8);
+  font-size: 0.8rem;
+  color: var(--gold-soft);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid rgba(167, 180, 164, 0.3);
+  padding: 0.4rem 0.3rem;
+}
+
+.table th {
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.table-row-clickable {
+  cursor: pointer;
+}
+
+.table-row-clickable:hover {
+  background: rgba(6, 68, 32, 0.4);
+}
+
+.chip-status {
+  border-radius: 999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.chip-ok {
+  background: rgba(92, 214, 92, 0.16);
+  color: #b8ffb8;
+}
+
+.chip-pending {
+  background: rgba(255, 190, 92, 0.16);
+  color: #ffe7b8;
+}
+
+.hidden {
+  display: none;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.house-points {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.house-card {
+  flex: 1;
+  min-width: 150px;
+  background: rgba(2, 19, 9, 0.8);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.house-card h4 {
+  margin: 0;
+  margin-bottom: 0.4rem;
+  color: var(--gold);
+}
+
+.points {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
