@@ -8,7 +8,7 @@
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json" />
 
-    <!-- Theme color (address bar color) -->
+    <!-- Theme color (for browser UI) -->
     <meta name="theme-color" content="#064420" />
 
     <!-- Styles -->
@@ -31,6 +31,15 @@
 
         <!-- AUTH SECTION -->
         <section class="card" id="authSection">
+          <!-- School logo at top of registration/login card -->
+          <div class="school-logo-wrapper">
+            <img
+              src="school-logo.png"
+              alt="School logo"
+              class="school-logo"
+            />
+          </div>
+
           <h2 class="card-title">Welcome</h2>
           <p class="card-subtitle">
             Log in or register as a learner or teacher.
@@ -38,8 +47,12 @@
 
           <div class="auth-tabs">
             <button class="btn btn-ghost" id="showLogin">Log in</button>
-            <button class="btn btn-ghost" id="showLearnerRegister">Learner registration</button>
-            <button class="btn btn-ghost" id="showTeacherRegister">Teacher registration</button>
+            <button class="btn btn-ghost" id="showLearnerRegister">
+              Learner registration
+            </button>
+            <button class="btn btn-ghost" id="showTeacherRegister">
+              Teacher registration
+            </button>
           </div>
 
           <!-- Login form -->
@@ -72,7 +85,12 @@
             <div class="flex">
               <div style="flex: 1">
                 <div class="label">Grade</div>
-                <input class="input" id="learnerGrade" type="number" required />
+                <input
+                  class="input"
+                  id="learnerGrade"
+                  type="number"
+                  required
+                />
               </div>
               <div style="flex: 1">
                 <div class="label">Phone (optional)</div>
@@ -91,16 +109,28 @@
             <div class="flex">
               <div style="flex: 1">
                 <div class="label">Email</div>
-                <input class="input" id="learnerEmail" type="email" required />
+                <input
+                  class="input"
+                  id="learnerEmail"
+                  type="email"
+                  required
+                />
               </div>
               <div style="flex: 1">
                 <div class="label">Password</div>
-                <input class="input" id="learnerPassword" type="password" required />
+                <input
+                  class="input"
+                  id="learnerPassword"
+                  type="password"
+                  required
+                />
               </div>
             </div>
 
             <div id="learnerRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Register learner</button>
+            <button class="btn btn-primary mt-2" type="submit">
+              Register learner
+            </button>
           </form>
 
           <!-- Teacher registration form -->
@@ -117,14 +147,26 @@
             </div>
             <div>
               <div class="label">Email</div>
-              <input class="input" id="teacherEmail" type="email" required />
+              <input
+                class="input"
+                id="teacherEmail"
+                type="email"
+                required
+              />
             </div>
             <div>
               <div class="label">Password</div>
-              <input class="input" id="teacherPassword" type="password" required />
+              <input
+                class="input"
+                id="teacherPassword"
+                type="password"
+                required
+              />
             </div>
             <div id="teacherRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Register teacher</button>
+            <button class="btn btn-primary mt-2" type="submit">
+              Register teacher
+            </button>
           </form>
         </section>
 
@@ -135,7 +177,8 @@
 
           <h3 class="mt-2">Active events</h3>
           <p class="card-subtitle">
-            Please go to your teacher to be checked in for events.
+            Please go to your teacher to be checked in for events. You cannot
+            check yourself in.
           </p>
 
           <table class="table" id="learnerEventsTable">
@@ -164,7 +207,7 @@
             <button class="btn btn-ghost" id="logoutButton">Log out</button>
           </div>
 
-          <!-- EVENT CREATION -->
+          <!-- Teacher: Events -->
           <div class="mt-2" id="teacherEventsPanel">
             <h3>Create event</h3>
             <form class="form-grid mt-1" id="createEventForm">
@@ -175,10 +218,17 @@
                 </div>
                 <div style="flex: 1">
                   <div class="label">Date</div>
-                  <input class="input" id="eventDate" type="date" required />
+                  <input
+                    class="input"
+                    id="eventDate"
+                    type="date"
+                    required
+                  />
                 </div>
               </div>
-              <button class="btn btn-primary mt-1" type="submit">Add event (draft)</button>
+              <button class="btn btn-primary mt-1" type="submit">
+                Add event (draft)
+              </button>
             </form>
 
             <h3 class="mt-2">All events</h3>
@@ -195,21 +245,22 @@
             </table>
           </div>
 
-          <!-- CHECK-IN -->
+          <!-- Teacher: Check-in -->
           <div class="mt-2 hidden" id="teacherCheckInPanel">
             <h3>Check-in learners</h3>
-
             <div class="flex mt-1">
               <div style="flex: 2">
                 <div class="label">Event</div>
                 <select class="select" id="checkInEventSelect"></select>
               </div>
-
               <div style="flex: 1">
                 <div class="label">Filter grade</div>
-                <input class="input" id="filterGrade" placeholder="e.g. 4" />
+                <input
+                  class="input"
+                  id="filterGrade"
+                  placeholder="e.g. 4"
+                />
               </div>
-
               <div style="flex: 1">
                 <div class="label">Filter house</div>
                 <select class="select" id="filterHouse">
@@ -219,11 +270,10 @@
                 </select>
               </div>
             </div>
-
             <p class="card-subtitle mt-1">
-              Tap "Check in" for each learner.
+              Tap "Check in" for each learner who attends. Each check-in = 1
+              point for that learner's house.
             </p>
-
             <table class="table" id="checkInLearnersTable">
               <thead>
                 <tr>
@@ -237,25 +287,41 @@
             </table>
           </div>
 
-          <!-- HOUSE POINTS -->
+          <!-- Teacher: House points -->
           <div class="mt-2 hidden" id="teacherPointsPanel">
             <h3>House points (secret)</h3>
-            <p class="card-subtitle">These totals are hidden from learners.</p>
+            <p class="card-subtitle">
+              These totals are hidden from learners. Use them to track the
+              competition.
+            </p>
 
             <div class="house-points">
               <div class="house-card">
-                <h4>House A</h4>
+                <div class="house-card-header">
+                  <img
+                    src="house-a-logo.png"
+                    alt="House A logo"
+                    class="house-logo"
+                  />
+                  <h4>House A</h4>
+                </div>
                 <div class="points" id="houseAPoints">0</div>
               </div>
 
               <div class="house-card">
-                <h4>House B</h4>
+                <div class="house-card-header">
+                  <img
+                    src="house-b-logo.png"
+                    alt="House B logo"
+                    class="house-logo"
+                  />
+                  <h4>House B</h4>
+                </div>
                 <div class="points" id="houseBPoints">0</div>
               </div>
             </div>
           </div>
         </section>
-
       </main>
     </div>
 
@@ -265,7 +331,9 @@
         window.addEventListener("load", () => {
           navigator.serviceWorker
             .register("pwabuilder-sw.js")
-            .catch((err) => console.log("Service Worker registration failed:", err));
+            .catch((err) =>
+              console.log("Service Worker registration failed:", err)
+            );
         });
       }
     </script>
