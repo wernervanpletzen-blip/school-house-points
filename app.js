@@ -3,10 +3,13 @@
 // TODO: replace with your Firebase config
 // (from Firebase console → Project settings → Your apps → Web app)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_AUTH_DOMAIN_HERE",
-  projectId: "YOUR_PROJECT_ID_HERE",
-};
+    apiKey: "AIzaSyCTh8EPbEHbwj-dY2wClMUfuo551wZODgs",
+    authDomain: "school-house-points-de0a0.firebaseapp.com",
+    projectId: "school-house-points-de0a0",
+    storageBucket: "school-house-points-de0a0.firebasestorage.app",
+    messagingSenderId: "557412828404",
+    appId: "1:557412828404:web:d7a8f300780df81b6f4aa1"
+  };
 
 // Initialise Firebase
 firebase.initializeApp(firebaseConfig);
