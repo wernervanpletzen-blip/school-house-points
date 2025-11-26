@@ -1,257 +1,266 @@
+/* ------------------------------------------------------------ */
+/* GLOBAL COLOR SYSTEM – Bottle Green + Gold                    */
+/* ------------------------------------------------------------ */
+
 :root {
-  --bottle-green: #064420;
-  --bottle-green-dark: #032413;
+  --green: #064420;
+  --green-light: #0b6130;
   --gold: #d4af37;
-  --gold-soft: #f3e2a9;
-  --bg-dark: #021309;
-  --text-light: #f8f8f8;
-  --card-bg: #0b2616;
-  --error: #ff6b6b;
-  --muted: #a7b4a4;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --gold-soft: rgba(212, 175, 55, 0.65);
+
+  --text-light: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.75);
+
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+
+  --input-bg: rgba(255, 255, 255, 0.12);
 }
+
+/* ------------------------------------------------------------ */
+/* GENERAL LAYOUT                                               */
+/* ------------------------------------------------------------ */
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #0b2a19, #020804);
+  background: var(--green);
   color: var(--text-light);
-}
-
-* {
-  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  max-width: 760px;
+  margin: auto;
+  padding-bottom: 3rem;
 }
 
+/* HEADER */
+
 .app-header {
-  background: linear-gradient(90deg, var(--bottle-green-dark), var(--bottle-green));
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: var(--green-light);
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 2px solid var(--gold-soft);
 }
 
 .app-header-title {
-  font-size: 1.25rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--gold);
 }
 
 .header-right {
-  font-size: 0.8rem;
-  color: #ddd;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  opactiy: 0.85;
 }
 
-.app-main {
-  flex: 1;
-  padding: 2rem 1rem 3rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
+/* ------------------------------------------------------------ */
+/* CARDS                                                        */
+/* ------------------------------------------------------------ */
 
 .card {
   background: var(--card-bg);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  padding: 1.4rem;
+  margin: 1.4rem;
+  animation: fadeIn 0.4s ease-out;
 }
 
 .card-title {
-  font-size: 1.3rem;
-  margin-bottom: 0.75rem;
-  color: var(--gold);
+  font-size: 1.4rem;
+  font-weight: 700;
 }
 
 .card-subtitle {
   font-size: 0.9rem;
-  margin-bottom: 1rem;
-  color: var(--muted);
+  opacity: 0.85;
 }
 
-.btn {
-  border-radius: 999px;
-  padding: 0.55rem 1.3rem;
+/* ------------------------------------------------------------ */
+/* SCHOOL LOGO                                                  */
+/* ------------------------------------------------------------ */
+
+.school-logo-wrapper {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.school-logo {
+  max-height: 130px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+  animation: fadeIn 0.7s ease;
+}
+
+/* ------------------------------------------------------------ */
+/* INPUTS / SELECT                                               */
+/* ------------------------------------------------------------ */
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
   border: none;
+  color: var(--text-light);
+  background: var(--input-bg);
+}
+
+.label {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 0.25rem;
+}
+
+/* ------------------------------------------------------------ */
+/* BUTTONS                                                       */
+/* ------------------------------------------------------------ */
+
+.btn {
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  color: white;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold), #f5d777);
-  color: #1a1200;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  background: var(--gold-soft);
+  color: black;
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7);
+  background: var(--gold);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--gold);
-  border: 1px solid rgba(212, 175, 55, 0.6);
 }
 
 .btn-ghost:hover {
-  background: rgba(212, 175, 55, 0.1);
+  opacity: 0.7;
 }
 
-.form-grid {
-  display: grid;
-  gap: 0.9rem;
+/* ------------------------------------------------------------ */
+/* HOUSE LOGOS + CARDS                                          */
+/* ------------------------------------------------------------ */
+
+.house-logo {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gold-soft);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-.label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin-bottom: 0.2rem;
+.house-logo-small {
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-soft);
+  object-fit: cover;
 }
 
-.input,
-.select {
-  width: 100%;
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  border: 1px solid rgba(167, 180, 164, 0.5);
-  background: rgba(1, 8, 4, 0.7);
-  color: var(--text-light);
+.house-card {
+  background: rgba(255,255,255,0.06);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--gold-soft);
+  margin-bottom: 1rem;
 }
 
-.input:focus,
-.select:focus {
-  outline: 1px solid var(--gold);
-  border-color: var(--gold);
-}
-
-.error {
-  color: var(--error);
-  font-size: 0.8rem;
-}
-
-.flex {
+.house-card-header {
   display: flex;
-  gap: 0.75rem;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 0.7rem;
 }
 
-.mt-1 {
-  margin-top: 0.75rem;
-}
+/* ------------------------------------------------------------ */
+/* LEARNER PROFILE HEADER                                       */
+/* ------------------------------------------------------------ */
 
-.mt-2 {
-  margin-top: 1.25rem;
-}
-
-.mt-3 {
-  margin-top: 1.75rem;
-}
-
-.badge-house {
-  display: inline-flex;
+.learner-header {
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(212, 175, 55, 0.8);
-  font-size: 0.8rem;
-  color: var(--gold-soft);
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
+
+.learner-header-text .learner-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.learner-header-text .learner-meta {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* ------------------------------------------------------------ */
+/* TABLES                                                       */
+/* ------------------------------------------------------------ */
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.75rem;
-  font-size: 0.85rem;
+  margin-top: 0.8rem;
 }
 
 .table th,
 .table td {
-  border-bottom: 1px solid rgba(167, 180, 164, 0.3);
-  padding: 0.4rem 0.3rem;
-}
-
-.table th {
   text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-
-.table-row-clickable {
-  cursor: pointer;
-}
-
-.table-row-clickable:hover {
-  background: rgba(6, 68, 32, 0.4);
+  padding: 0.6rem 0.4rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .chip-status {
-  border-radius: 999px;
-  padding: 0.15rem 0.65rem;
-  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
 }
 
 .chip-ok {
-  background: rgba(92, 214, 92, 0.16);
-  color: #b8ffb8;
+  background: rgba(0, 200, 0, 0.35);
 }
 
 .chip-pending {
-  background: rgba(255, 190, 92, 0.16);
-  color: #ffe7b8;
+  background: rgba(255, 200, 0, 0.35);
 }
+
+/* ------------------------------------------------------------ */
+/* HELPERS                                                      */
+/* ------------------------------------------------------------ */
 
 .hidden {
   display: none;
 }
 
-.auth-tabs {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
-}
-
-.house-points {
+.flex {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
+}
+
+.mt-1 {
   margin-top: 1rem;
 }
 
-.house-card {
-  flex: 1;
-  min-width: 150px;
-  background: rgba(2, 19, 9, 0.8);
-  border-radius: 12px;
-  padding: 1rem;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+.mt-2 {
+  margin-top: 2rem;
 }
 
-.house-card h4 {
-  margin: 0;
-  margin-bottom: 0.4rem;
-  color: var(--gold);
-}
+/* ------------------------------------------------------------ */
+/* ANIMATIONS                                                   */
+/* ------------------------------------------------------------ */
 
-.points {
-  font-size: 1.8rem;
-  font-weight: 700;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
