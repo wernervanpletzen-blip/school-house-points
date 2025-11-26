@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>School House Points</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Firebase (compat version, works without build tools) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="app-header-title">
+          School House Points
+        </div>
+        <div class="header-right" id="headerUserInfo"></div>
+      </header>
+
+      <main class="app-main">
+
+        <!-- AUTH SECTION -->
+        <section class="card" id="authSection">
+          <h2 class="card-title">Welcome</h2>
+          <p class="card-subtitle">
+            Log in or register as a learner or teacher.
+          </p>
+
+          <div class="auth-tabs">
+            <button class="btn btn-ghost" id="showLogin">Log in</button>
+            <button class="btn btn-ghost" id="showLearnerRegister">Learner registration</button>
+            <button class="btn btn-ghost" id="showTeacherRegister">Teacher registration</button>
+          </div>
+
+          <!-- Login form -->
+          <form class="form-grid mt-2" id="loginForm">
+            <div>
+              <div class="label">Email</div>
+              <input class="input" type="email" id="loginEmail" required />
+            </div>
+            <div>
+              <div class="label">Password</div>
+              <input class="input" type="password" id="loginPassword" required />
+            </div>
+            <div id="loginError" class="error mt-1"></div>
+            <button class="btn btn-primary mt-2" type="submit">Log in</button>
+          </form>
+
+          <!-- Learner registration form -->
+          <form class="form-grid mt-2 hidden" id="learnerRegisterForm">
+            <div class="flex">
+              <div style="flex: 1">
+                <div class="label">Name</div>
+                <input class="input" id="learnerName" required />
+              </div>
+              <div style="flex: 1">
+                <div class="label">Surname</div>
+                <input class="input" id="learnerSurname" required />
+              </div>
+            </div>
+
+            <div class="flex">
+              <div style="flex: 1">
+                <div class="label">Grade</div>
+                <input class="input" id="learnerGrade" type="number" required />
+              </div>
+              <div style="flex: 1">
+                <div class="label">Phone (optional)</div>
+                <input class="input" id="learnerPhone" />
+              </div>
+            </div>
+
+            <div>
+              <div class="label">House</div>
+              <select class="select" id="learnerHouse">
+                <option value="houseA">House A</option>
+                <option value="houseB">House B</option>
+              </select>
+            </div>
+
+            <div class="flex">
+              <div style="flex: 1">
+                <div class="label">Email</div>
+                <input class="input" id="learnerEmail" type="email" required />
+              </div>
+              <div style="flex: 1">
+                <div class="label">Password</div>
+                <input class="input" id="learnerPassword" type="password" required />
+              </div>
+            </div>
+
+            <div id="learnerRegisterError" class="error mt-1"></div>
+            <button class="btn btn-primary mt-2" type="submit">
+              Register learner
+            </button>
+          </form>
+
+          <!-- Teacher registration form -->
+          <form class="form-grid mt-2 hidden" id="teacherRegisterForm">
+            <div class="flex">
+              <div style="flex: 1">
+                <div class="label">Name</div>
+                <input class="input" id="teacherName" required />
+              </div>
+              <div style="flex: 1">
+                <div class="label">Surname</div>
+                <input class="input" id="teacherSurname" required />
+              </div>
+            </div>
+            <div>
+              <div class="label">Email</div>
+              <input class="input" id="teacherEmail" type="email" required />
+            </div>
+            <div>
+              <div class="label">Password</div>
+              <input class="input" id="teacherPassword" type="password" required />
+            </div>
+            <div id="teacherRegisterError" class="error mt-1"></div>
+            <button class="btn btn-primary mt-2" type="submit">
+              Register teacher
+            </button>
+          </form>
+        </section>
+
+        <!-- LEARNER DASHBOARD -->
+        <section class="card hidden" id="learnerDashboard">
+          <h2 class="card-title">Learner dashboard</h2>
+          <div class="card-subtitle" id="learnerInfo"></div>
+
+          <h3 class="mt-2">Active events</h3>
+          <p class="card-subtitle">
+            Please go to your teacher to be checked in for events. You cannot check yourself in.
+          </p>
+
+          <table class="table" id="learnerEventsTable">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Your status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <!-- TEACHER DASHBOARD -->
+        <section class="card hidden" id="teacherDashboard">
+          <h2 class="card-title">Teacher dashboard</h2>
+          <p class="card-subtitle">
+            Create events, check in learners, and view secret house points.
+          </p>
+
+          <div class="flex mt-1">
+            <button class="btn btn-ghost" id="tabEvents">Events</button>
+            <button class="btn btn-ghost" id="tabCheckIn">Check-in</button>
+            <button class="btn btn-ghost" id="tabPoints">House points</button>
+            <button class="btn btn-ghost" id="logoutButton">Log out</button>
+          </div>
+
+          <!-- Teacher: Events -->
+          <div class="mt-2" id="teacherEventsPanel">
+            <h3>Create event</h3>
+            <form class="form-grid mt-1" id="createEventForm">
+              <div class="flex">
+                <div style="flex: 2">
+                  <div class="label">Event name</div>
+                  <input class="input" id="eventName" required />
+                </div>
+                <div style="flex: 1">
+                  <div class="label">Date</div>
+                  <input class="input" id="eventDate" type="date" required />
+                </div>
+              </div>
+              <button class="btn btn-primary mt-1" type="submit">
+                Add event (draft)
+              </button>
+            </form>
+
+            <h3 class="mt-2">All events</h3>
+            <table class="table" id="teacherEventsTable">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- Teacher: Check-in -->
+          <div class="mt-2 hidden" id="teacherCheckInPanel">
+            <h3>Check-in learners</h3>
+            <div class="flex mt-1">
+              <div style="flex: 2">
+                <div class="label">Event</div>
+                <select class="select" id="checkInEventSelect"></select>
+              </div>
+              <div style="flex: 1">
+                <div class="label">Filter grade</div>
+                <input class="input" id="filterGrade" placeholder="e.g. 4" />
+              </div>
+              <div style="flex: 1">
+                <div class="label">Filter house</div>
+                <select class="select" id="filterHouse">
+                  <option value="">All</option>
+                  <option value="houseA">House A</option>
+                  <option value="houseB">House B</option>
+                </select>
+              </div>
+            </div>
+            <p class="card-subtitle mt-1">
+              Tap "Check in" for each learner who attends. Each check-in = 1 point for that learner's house.
+            </p>
+            <table class="table" id="checkInLearnersTable">
+              <thead>
+                <tr>
+                  <th>Learner</th>
+                  <th>Grade</th>
+                  <th>House</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- Teacher: House points -->
+          <div class="mt-2 hidden" id="teacherPointsPanel">
+            <h3>House points (secret)</h3>
+            <p class="card-subtitle">
+              These totals are hidden from learners. Use them to track the competition.
+            </p>
+
+            <div class="house-points">
+              <div class="house-card">
+                <h4>House A</h4>
+                <div class="points" id="houseAPoints">0</div>
+              </div>
+              <div class="house-card">
+                <h4>House B</h4>
+                <div class="points" id="houseBPoints">0</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Your app logic -->
+    <script src="app.js"></script>
+  </body>
+</html>
