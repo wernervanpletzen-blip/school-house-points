@@ -25,7 +25,8 @@ body {
   margin: 0;
   background: var(--green);
   color: var(--text-light);
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -51,9 +52,9 @@ body {
 }
 
 .header-right {
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
   font-size: 0.9rem;
-  opactiy: 0.85;
+  opacity: 0.85;
 }
 
 /* ------------------------------------------------------------ */
@@ -73,6 +74,7 @@ body {
 .card-title {
   font-size: 1.4rem;
   font-weight: 700;
+  margin-bottom: 0.2rem;
 }
 
 .card-subtitle {
@@ -92,7 +94,7 @@ body {
 .school-logo {
   max-height: 130px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
   animation: fadeIn 0.7s ease;
 }
 
@@ -108,6 +110,7 @@ body {
   border: none;
   color: var(--text-light);
   background: var(--input-bg);
+  box-sizing: border-box;
 }
 
 .label {
@@ -147,6 +150,45 @@ body {
   opacity: 0.7;
 }
 
+/* Tabs in auth area */
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ */
+/* FLEX LAYOUT (FIX OVERLAPPING FIELDS)                         */
+/* ------------------------------------------------------------ */
+
+.flex {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap; /* allow wrapping on small screens */
+}
+
+.flex > div {
+  flex: 1 1 0;
+}
+
+/* On small screens, stack fields vertically */
+@media (max-width: 640px) {
+  .card {
+    margin: 1rem;
+    padding: 1.1rem;
+  }
+
+  .flex {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .flex > div {
+    width: 100%;
+  }
+}
+
 /* ------------------------------------------------------------ */
 /* HOUSE LOGOS + CARDS                                          */
 /* ------------------------------------------------------------ */
@@ -156,20 +198,20 @@ body {
   width: 50px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--gold-soft);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  border: 3px solid rgba(255, 255, 255, 0.9); /* WHITE BORDER */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .house-logo-small {
   height: 28px;
   width: 28px;
   border-radius: 50%;
-  border: 2px solid var(--gold-soft);
+  border: 2px solid rgba(255, 255, 255, 0.9); /* WHITE BORDER */
   object-fit: cover;
 }
 
 .house-card {
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   padding: 1rem;
   border-radius: 12px;
   border: 1px solid var(--gold-soft);
@@ -182,6 +224,12 @@ body {
   gap: 0.7rem;
 }
 
+.house-points {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
 /* ------------------------------------------------------------ */
 /* LEARNER PROFILE HEADER                                       */
 /* ------------------------------------------------------------ */
@@ -190,8 +238,8 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .learner-header-text .learner-name {
@@ -202,6 +250,13 @@ body {
 .learner-header-text .learner-meta {
   font-size: 0.9rem;
   opacity: 0.8;
+}
+
+/* House cell in check-in table */
+.house-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 /* ------------------------------------------------------------ */
@@ -218,7 +273,8 @@ body {
 .table td {
   text-align: left;
   padding: 0.6rem 0.4rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.9rem;
 }
 
 .chip-status {
@@ -243,11 +299,6 @@ body {
   display: none;
 }
 
-.flex {
-  display: flex;
-  gap: 1rem;
-}
-
 .mt-1 {
   margin-top: 1rem;
 }
@@ -261,6 +312,12 @@ body {
 /* ------------------------------------------------------------ */
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
