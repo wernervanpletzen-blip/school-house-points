@@ -1,12 +1,22 @@
 {
-  "background_color": "#021309",
-  "dir": "ltr",
+  "name": "School House Points",
+  "short_name": "House Points",
+  "description": "Eerhof vs Edelhof — Learners earn points through attendance and participation.",
+  "start_url": "./index.html",
   "display": "standalone",
-  "name": "LA HUISE",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "LA HUISE",
-  "start_url": "/",
+  "background_color": "#064420",
   "theme_color": "#064420",
-  "description": "Kry jou huis se punte. Nou!"
+
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
