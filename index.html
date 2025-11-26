@@ -8,13 +8,13 @@
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json" />
 
-    <!-- Theme color (for browser UI) -->
+    <!-- Theme color -->
     <meta name="theme-color" content="#064420" />
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css" />
 
-    <!-- Firebase (compat version, works without Node/npm) -->
+    <!-- Firebase (compat version) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -29,9 +29,8 @@
 
       <main class="app-main">
 
-        <!-- AUTH SECTION -->
+        <!-- ================= AUTH SECTION ================= -->
         <section class="card" id="authSection">
-          <!-- School logo at top of registration/login card -->
           <div class="school-logo-wrapper">
             <img
               src="school-logo.png"
@@ -69,7 +68,7 @@
             <button class="btn btn-primary mt-2" type="submit">Log in</button>
           </form>
 
-          <!-- Learner registration form -->
+          <!-- Learner registration -->
           <form class="form-grid mt-2 hidden" id="learnerRegisterForm">
             <div class="flex">
               <div style="flex: 1">
@@ -85,12 +84,7 @@
             <div class="flex">
               <div style="flex: 1">
                 <div class="label">Grade</div>
-                <input
-                  class="input"
-                  id="learnerGrade"
-                  type="number"
-                  required
-                />
+                <input class="input" id="learnerGrade" type="number" required />
               </div>
               <div style="flex: 1">
                 <div class="label">Phone (optional)</div>
@@ -101,29 +95,19 @@
             <div>
               <div class="label">House</div>
               <select class="select" id="learnerHouse">
-                <option value="houseA">House A</option>
-                <option value="houseB">House B</option>
+                <option value="houseA">Eerhof</option>
+                <option value="houseB">Edelhof</option>
               </select>
             </div>
 
             <div class="flex">
               <div style="flex: 1">
                 <div class="label">Email</div>
-                <input
-                  class="input"
-                  id="learnerEmail"
-                  type="email"
-                  required
-                />
+                <input class="input" id="learnerEmail" type="email" required />
               </div>
               <div style="flex: 1">
                 <div class="label">Password</div>
-                <input
-                  class="input"
-                  id="learnerPassword"
-                  type="password"
-                  required
-                />
+                <input class="input" id="learnerPassword" type="password" required />
               </div>
             </div>
 
@@ -133,7 +117,7 @@
             </button>
           </form>
 
-          <!-- Teacher registration form -->
+          <!-- Teacher registration -->
           <form class="form-grid mt-2 hidden" id="teacherRegisterForm">
             <div class="flex">
               <div style="flex: 1">
@@ -145,24 +129,17 @@
                 <input class="input" id="teacherSurname" required />
               </div>
             </div>
+
             <div>
               <div class="label">Email</div>
-              <input
-                class="input"
-                id="teacherEmail"
-                type="email"
-                required
-              />
+              <input class="input" id="teacherEmail" type="email" required />
             </div>
+
             <div>
               <div class="label">Password</div>
-              <input
-                class="input"
-                id="teacherPassword"
-                type="password"
-                required
-              />
+              <input class="input" id="teacherPassword" type="password" required />
             </div>
+
             <div id="teacherRegisterError" class="error mt-1"></div>
             <button class="btn btn-primary mt-2" type="submit">
               Register teacher
@@ -170,15 +147,14 @@
           </form>
         </section>
 
-        <!-- LEARNER DASHBOARD -->
+        <!-- ================= LEARNER DASHBOARD ================= -->
         <section class="card hidden" id="learnerDashboard">
           <h2 class="card-title">Learner dashboard</h2>
           <div class="card-subtitle" id="learnerInfo"></div>
 
           <h3 class="mt-2">Active events</h3>
           <p class="card-subtitle">
-            Please go to your teacher to be checked in for events. You cannot
-            check yourself in.
+            Please go to your teacher to be checked in for events.
           </p>
 
           <table class="table" id="learnerEventsTable">
@@ -193,11 +169,11 @@
           </table>
         </section>
 
-        <!-- TEACHER DASHBOARD -->
+        <!-- ================= TEACHER DASHBOARD ================= -->
         <section class="card hidden" id="teacherDashboard">
           <h2 class="card-title">Teacher dashboard</h2>
           <p class="card-subtitle">
-            Create events, check in learners, and view secret house points.
+            Create events, check in learners, and view house points.
           </p>
 
           <div class="flex mt-1">
@@ -207,7 +183,7 @@
             <button class="btn btn-ghost" id="logoutButton">Log out</button>
           </div>
 
-          <!-- Teacher: Events -->
+          <!-- Teacher Events -->
           <div class="mt-2" id="teacherEventsPanel">
             <h3>Create event</h3>
             <form class="form-grid mt-1" id="createEventForm">
@@ -218,16 +194,11 @@
                 </div>
                 <div style="flex: 1">
                   <div class="label">Date</div>
-                  <input
-                    class="input"
-                    id="eventDate"
-                    type="date"
-                    required
-                  />
+                  <input class="input" id="eventDate" type="date" required />
                 </div>
               </div>
               <button class="btn btn-primary mt-1" type="submit">
-                Add event (draft)
+                Add event
               </button>
             </form>
 
@@ -245,35 +216,35 @@
             </table>
           </div>
 
-          <!-- Teacher: Check-in -->
+          <!-- Teacher Check-In -->
           <div class="mt-2 hidden" id="teacherCheckInPanel">
             <h3>Check-in learners</h3>
+
             <div class="flex mt-1">
               <div style="flex: 2">
                 <div class="label">Event</div>
                 <select class="select" id="checkInEventSelect"></select>
               </div>
+
               <div style="flex: 1">
                 <div class="label">Filter grade</div>
-                <input
-                  class="input"
-                  id="filterGrade"
-                  placeholder="e.g. 4"
-                />
+                <input class="input" id="filterGrade" placeholder="Grade" />
               </div>
+
               <div style="flex: 1">
                 <div class="label">Filter house</div>
                 <select class="select" id="filterHouse">
                   <option value="">All</option>
-                  <option value="houseA">House A</option>
-                  <option value="houseB">House B</option>
+                  <option value="houseA">Eerhof</option>
+                  <option value="houseB">Edelhof</option>
                 </select>
               </div>
             </div>
+
             <p class="card-subtitle mt-1">
-              Tap "Check in" for each learner who attends. Each check-in = 1
-              point for that learner's house.
+              Tap "Check in" for each learner that attends.
             </p>
+
             <table class="table" id="checkInLearnersTable">
               <thead>
                 <tr>
@@ -287,35 +258,36 @@
             </table>
           </div>
 
-          <!-- Teacher: House points -->
+          <!-- Teacher House Points -->
           <div class="mt-2 hidden" id="teacherPointsPanel">
             <h3>House points (secret)</h3>
             <p class="card-subtitle">
-              These totals are hidden from learners. Use them to track the
-              competition.
+              These totals remain hidden from learners.
             </p>
 
             <div class="house-points">
+              <!-- Eerhof -->
               <div class="house-card">
                 <div class="house-card-header">
                   <img
                     src="house-a-logo.png"
-                    alt="House A logo"
+                    alt="Eerhof logo"
                     class="house-logo"
                   />
-                  <h4>House A</h4>
+                  <h4>Eerhof</h4>
                 </div>
                 <div class="points" id="houseAPoints">0</div>
               </div>
 
+              <!-- Edelhof -->
               <div class="house-card">
                 <div class="house-card-header">
                   <img
                     src="house-b-logo.png"
-                    alt="House B logo"
+                    alt="Edelhof logo"
                     class="house-logo"
                   />
-                  <h4>House B</h4>
+                  <h4>Edelhof</h4>
                 </div>
                 <div class="points" id="houseBPoints">0</div>
               </div>
@@ -325,7 +297,7 @@
       </main>
     </div>
 
-    <!-- PWA Service Worker Registration -->
+    <!-- PWA Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
