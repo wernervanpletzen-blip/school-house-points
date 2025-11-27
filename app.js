@@ -1,464 +1,413 @@
-// === 1. FIREBASE CONFIG ===================================================
-
-// TODO: replace with your Firebase config
+/* ============================================================
+   FIREBASE SETUP
+   Replace this config with YOUR Firebase project config
+   ============================================================ */
 const firebaseConfig = {
-  apiKey: "AIzaSyCTh8EPbEHbwj-dY2wClMUfuo551wZODgs",
-  authDomain: "school-house-points-de0a0.firebaseapp.com",
-  projectId: "school-house-points-de0a0",
-  storageBucket: "school-house-points-de0a0.firebasestorage.app",
-  messagingSenderId: "557412828404",
-  appId: "1:557412828404:web:d7a8f300780df81b6f4aa1"
+  apiKey: "YOUR_API_KEY_HERE",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-// Initialise Firebase
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// === HOUSE DEFINITIONS ====================================================
-// These are your REAL house names and their logos.
-
+/* ============================================================
+   HOUSE DEFINITIONS
+   ============================================================ */
 const HOUSES = {
-  houseA: {
-    displayName: "Eerhof",
-    logo: "house-a-logo.png", // must exist in repo root
-  },
-  houseB: {
-    displayName: "Edelhof",
-    logo: "house-b-logo.png", // must exist in repo root
-  },
+  houseA: { displayName: "Eerhof", logo: "house-a-logo.png" },
+  houseB: { displayName: "Edelhof", logo: "house-b-logo.png" }
 };
 
-// Globals to track logged-in user + profile
-let currentUser = null;
-let currentProfile = null;
+/* ============================================================
+   DOM ELEMENTS
+   ============================================================ */
+const authSection = document.getElementById("authSection");
+const learnerDashboard = document.getElementById("learnerDashboard");
+const teacherDashboard = document.getElementById("teacherDashboard");
+const headerUserInfo = document.getElementById("headerUserInfo");
 
-// === 2. SHOW/HIDE SECTIONS ================================================
+const tabEvents = document.getElementById("tabEvents");
+const tabCheckIn = document.getElementById("tabCheckIn");
+const tabPoints = document.getElementById("tabPoints");
+const teacherEventsPanel = document.getElementById("teacherEventsPanel");
+const teacherCheckInPanel = document.getElementById("teacherCheckInPanel");
+const teacherPointsPanel = document.getElementById("teacherPointsPanel");
 
-function showSection(sectionId) {
-  const sections = ["authSection", "learnerDashboard", "teacherDashboard"];
-  sections.forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (id === sectionId) el.classList.remove("hidden");
-    else el.classList.add("hidden");
-  });
+/* ============================================================
+   SHOW / HIDE PANELS
+   ============================================================ */
+function showPanel(panel) {
+  teacherEventsPanel.classList.add("hidden");
+  teacherCheckInPanel.classList.add("hidden");
+  teacherPointsPanel.classList.add("hidden");
+  panel.classList.remove("hidden");
 }
 
-function showAuthForm(form) {
-  const loginForm = document.getElementById("loginForm");
-  const learnerForm = document.getElementById("learnerRegisterForm");
-  const teacherForm = document.getElementById("teacherRegisterForm");
-
-  [loginForm, learnerForm, teacherForm].forEach((f) =>
-    f.classList.add("hidden")
-  );
-  if (form === "login") loginForm.classList.remove("hidden");
-  if (form === "learner") learnerForm.classList.remove("hidden");
-  if (form === "teacher") teacherForm.classList.remove("hidden");
-}
-
-// === 3. AUTH STATE ========================================================
-
+/* ============================================================
+   AUTH STATE LISTENER
+   ============================================================ */
 auth.onAuthStateChanged(async (user) => {
-  currentUser = user;
-  const headerInfoEl = document.getElementById("headerUserInfo");
-
   if (!user) {
-    currentProfile = null;
-    headerInfoEl.textContent = "";
-    showSection("authSection");
-    showAuthForm("login");
+    authSection.classList.remove("hidden");
+    learnerDashboard.classList.add("hidden");
+    teacherDashboard.classList.add("hidden");
+    headerUserInfo.innerHTML = "";
     return;
   }
 
-  const docRef = db.collection("users").doc(user.uid);
-  const snap = await docRef.get();
-  if (!snap.exists) {
-    await auth.signOut();
-    return;
+  const userDoc = await db.collection("users").doc(user.uid).get();
+  const userData = userDoc.data();
+
+  headerUserInfo.innerHTML = `${userData.name} ${userData.surname} (${userData.role})`;
+
+  // ROLE LOGIC
+  if (userData.role === "learner") {
+    authSection.classList.add("hidden");
+    teacherDashboard.classList.add("hidden");
+    learnerDashboard.classList.remove("hidden");
+    loadLearnerProfile(user.uid);
+    loadLearnerEvents(user.uid);
   }
 
-  currentProfile = { id: snap.id, ...snap.data() };
+  if (userData.role === "teacher") {
+    authSection.classList.add("hidden");
+    learnerDashboard.classList.add("hidden");
+    teacherDashboard.classList.remove("hidden");
 
-  headerInfoEl.textContent = `${
-    currentProfile.role === "teacher" ? "Teacher" : "Learner"
-  }: ${currentProfile.name} ${currentProfile.surname}`;
+    tabPoints.classList.add("hidden"); // teacher cannot see house points
 
-  if (currentProfile.role === "learner") {
-    showSection("learnerDashboard");
-    loadLearnerDashboard();
-  } else {
-    showSection("teacherDashboard");
-    initTeacherTabs();
+    showPanel(teacherEventsPanel);
     loadTeacherEvents();
-    loadTeacherCheckIn();
+    loadCheckInEventList();
+  }
+
+  if (userData.role === "admin") {
+    authSection.classList.add("hidden");
+    learnerDashboard.classList.add("hidden");
+    teacherDashboard.classList.remove("hidden");
+
+    tabPoints.classList.remove("hidden"); // ONLY admin can see this
+
+    showPanel(teacherEventsPanel);
+    loadTeacherEvents();
+    loadCheckInEventList();
     loadHousePoints();
   }
 });
 
-// === 4. EVENT LISTENERS ===================================================
-
-window.addEventListener("load", () => {
-  document
-    .getElementById("showLogin")
-    .addEventListener("click", () => showAuthForm("login"));
-  document
-    .getElementById("showLearnerRegister")
-    .addEventListener("click", () => showAuthForm("learner"));
-  document
-    .getElementById("showTeacherRegister")
-    .addEventListener("click", () => showAuthForm("teacher"));
-
-  document
-    .getElementById("loginForm")
-    .addEventListener("submit", loginHandler);
-  document
-    .getElementById("learnerRegisterForm")
-    .addEventListener("submit", learnerRegisterHandler);
-  document
-    .getElementById("teacherRegisterForm")
-    .addEventListener("submit", teacherRegisterHandler);
-
-  document
-    .getElementById("tabEvents")
-    .addEventListener("click", () => showTeacherPanel("events"));
-  document
-    .getElementById("tabCheckIn")
-    .addEventListener("click", () => showTeacherPanel("checkin"));
-  document
-    .getElementById("tabPoints")
-    .addEventListener("click", () => showTeacherPanel("points"));
-
-  document
-    .getElementById("logoutButton")
-    .addEventListener("click", () => auth.signOut());
-
-  document
-    .getElementById("createEventForm")
-    .addEventListener("submit", createEventHandler);
-  document
-    .getElementById("filterGrade")
-    .addEventListener("input", loadTeacherCheckIn);
-  document
-    .getElementById("filterHouse")
-    .addEventListener("change", loadTeacherCheckIn);
-  document
-    .getElementById("checkInEventSelect")
-    .addEventListener("change", loadTeacherCheckIn);
-});
-
-// === 5. AUTH FUNCTIONS ====================================================
-
-async function loginHandler(e) {
+/* ============================================================
+   LOGIN FORM
+   ============================================================ */
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errorEl = document.getElementById("loginError");
-  errorEl.textContent = "";
+  const email = loginEmail.value;
+  const password = loginPassword.value;
 
   try {
     await auth.signInWithEmailAndPassword(email, password);
-  } catch {
-    errorEl.textContent = "Login failed.";
+  } catch (err) {
+    loginError.innerText = err.message;
   }
-}
+});
 
-async function learnerRegisterHandler(e) {
+/* ============================================================
+   LEARNER REGISTRATION
+   ============================================================ */
+document.getElementById("learnerRegisterForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = document.getElementById("learnerName").value.trim();
-  const surname = document.getElementById("learnerSurname").value.trim();
-  const grade = document.getElementById("learnerGrade").value.trim();
-  const phone = document.getElementById("learnerPhone").value.trim();
-  const houseId = document.getElementById("learnerHouse").value;
-  const email = document.getElementById("learnerEmail").value.trim();
-  const password = document.getElementById("learnerPassword").value;
 
-  const errorEl = document.getElementById("learnerRegisterError");
-  errorEl.textContent = "";
+  const name = learnerName.value;
+  const surname = learnerSurname.value;
+  const grade = learnerGrade.value;
+  const house = learnerHouse.value;
+  const phone = learnerPhone.value;
+  const email = learnerEmail.value;
+  const password = learnerPassword.value;
 
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, password);
+
     await db.collection("users").doc(cred.user.uid).set({
       name,
       surname,
+      email,
       grade,
       phone,
-      houseId, // Eerhof (houseA) or Edelhof (houseB)
-      role: "learner",
+      house,
+      role: "learner"
     });
-  } catch {
-    errorEl.textContent = "Could not register learner.";
+
+  } catch (err) {
+    learnerRegisterError.innerText = err.message;
   }
-}
+});
 
-async function teacherRegisterHandler(e) {
+/* ============================================================
+   TEACHER REGISTRATION
+   ============================================================ */
+document.getElementById("teacherRegisterForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = document.getElementById("teacherName").value.trim();
-  const surname = document.getElementById("teacherSurname").value.trim();
-  const email = document.getElementById("teacherEmail").value.trim();
-  const password = document.getElementById("teacherPassword").value;
 
-  const errorEl = document.getElementById("teacherRegisterError");
-  errorEl.textContent = "";
+  const name = teacherName.value;
+  const surname = teacherSurname.value;
+  const email = teacherEmail.value;
+  const password = teacherPassword.value;
 
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, password);
+
     await db.collection("users").doc(cred.user.uid).set({
       name,
       surname,
-      role: "teacher",
+      email,
+      role: "teacher"
     });
-  } catch {
-    errorEl.textContent = "Could not register teacher.";
+
+  } catch (err) {
+    teacherRegisterError.innerText = err.message;
   }
+});
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+if (document.getElementById("logoutButton")) {
+  logoutButton.addEventListener("click", () => auth.signOut());
 }
 
-// === 6. LEARNER DASHBOARD =================================================
+/* ============================================================
+   LEARNER DASHBOARD LOAD
+   ============================================================ */
+async function loadLearnerProfile(uid) {
+  const userDoc = await db.collection("users").doc(uid).get();
+  const user = userDoc.data();
 
-async function loadLearnerDashboard() {
-  if (!currentProfile) return;
+  const houseInfo = HOUSES[user.house];
 
-  const infoEl = document.getElementById("learnerInfo");
-  const house = HOUSES[currentProfile.houseId];
-
-  infoEl.innerHTML = `
+  learnerInfo.innerHTML = `
     <div class="learner-header">
-      <img src="${house.logo}" class="house-logo" />
-      <div class="learner-header-text">
-        <div class="learner-name">
-          ${currentProfile.name} ${currentProfile.surname}
-        </div>
-        <div class="learner-meta">
-          Grade ${currentProfile.grade} • ${house.displayName}
-        </div>
+      <img src="${houseInfo.logo}" class="house-logo-small" />
+      <div>
+        <div class="learner-name">${user.name} ${user.surname}</div>
+        <div class="learner-meta">Graad ${user.grade} – ${houseInfo.displayName}</div>
       </div>
     </div>
   `;
+}
 
-  const eventsSnap = await db
-    .collection("events")
-    .where("status", "==", "active")
-    .get();
-  const events = eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-  const attSnap = await db
-    .collection("attendance")
-    .where("learnerId", "==", currentProfile.id)
-    .get();
-  const attendance = attSnap.docs.map((d) => d.data());
-
+async function loadLearnerEvents(uid) {
+  const eventsSnap = await db.collection("events").get();
   const tbody = document.querySelector("#learnerEventsTable tbody");
   tbody.innerHTML = "";
 
-  events.forEach((ev) => {
-    const checked = attendance.some((a) => a.eventId === ev.id);
-    tbody.innerHTML += `
+  for (let doc of eventsSnap.docs) {
+    const event = doc.data();
+
+    const attendanceDoc = await db.collection("attendance")
+      .doc(`${uid}_${doc.id}`)
+      .get();
+
+    const status = attendanceDoc.exists ? "GemerK" : "Nie gemerk nie";
+
+    const tr = `
       <tr>
-        <td>${ev.name}</td>
-        <td>${ev.date}</td>
-        <td>
-          ${
-            checked
-              ? '<span class="chip-status chip-ok">Checked in ✅</span>'
-              : '<span class="chip-status chip-pending">Not checked in</span>'
-          }
-        </td>
+        <td>${event.name}</td>
+        <td>${event.date}</td>
+        <td>${status}</td>
       </tr>
     `;
-  });
+
+    tbody.innerHTML += tr;
+  }
 }
 
-// === 7. TEACHER TABS ======================================================
-
-function initTeacherTabs() {
-  showTeacherPanel("events");
-}
-
-function showTeacherPanel(panel) {
-  document.getElementById("teacherEventsPanel").classList.add("hidden");
-  document.getElementById("teacherCheckInPanel").classList.add("hidden");
-  document.getElementById("teacherPointsPanel").classList.add("hidden");
-
-  if (panel === "events") document.getElementById("teacherEventsPanel").classList.remove("hidden");
-  if (panel === "checkin") document.getElementById("teacherCheckInPanel").classList.remove("hidden");
-  if (panel === "points") document.getElementById("teacherPointsPanel").classList.remove("hidden");
-
-  if (panel === "events") loadTeacherEvents();
-  if (panel === "checkin") loadTeacherCheckIn();
-  if (panel === "points") loadHousePoints();
-}
-
-// === 8. TEACHER: EVENTS ===================================================
-
-async function createEventHandler(e) {
+/* ============================================================
+   TEACHER / ADMIN — EVENTS
+   ============================================================ */
+document.getElementById("createEventForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = document.getElementById("eventName").value.trim();
-  const date = document.getElementById("eventDate").value;
+
+  const name = eventName.value;
+  const date = eventDate.value;
 
   await db.collection("events").add({
     name,
     date,
-    status: "draft",
+    active: true
   });
 
+  eventName.value = "";
+  eventDate.value = "";
+
   loadTeacherEvents();
-}
+});
 
 async function loadTeacherEvents() {
-  const eventsSnap = await db.collection("events").orderBy("date").get();
-  const events = eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
   const tbody = document.querySelector("#teacherEventsTable tbody");
   tbody.innerHTML = "";
 
-  events.forEach((ev) => {
-    tbody.innerHTML += `
+  const snap = await db.collection("events").get();
+
+  snap.forEach((doc) => {
+    const event = doc.data();
+
+    const tr = `
       <tr>
-        <td>${ev.name}</td>
-        <td>${ev.date}</td>
-        <td>${ev.status}</td>
+        <td>${event.name}</td>
+        <td>${event.date}</td>
+        <td>${event.active ? "Aktief" : "Gesluit"}</td>
         <td>
-          ${
-            ev.status === "draft"
-              ? `<button onclick="updateEventStatus('${ev.id}','active')" class="btn btn-primary btn-sm">Release</button>`
-              : ""
-          }
-          ${
-            ev.status === "active"
-              ? `<button onclick="updateEventStatus('${ev.id}','closed')" class="btn btn-ghost btn-sm">Close</button>`
-              : ""
-          }
-          <button onclick="deleteEvent('${ev.id}')" class="btn btn-ghost btn-sm">Delete</button>
+          <button class="btn btn-primary" onclick="toggleEvent('${doc.id}', ${event.active})">
+            ${event.active ? "Sluit" : "Open"}
+          </button>
+          <button class="btn btn-ghost" onclick="deleteEvent('${doc.id}')">Verwyder</button>
         </td>
       </tr>
     `;
+
+    tbody.innerHTML += tr;
+  });
+}
+
+async function toggleEvent(id, isActive) {
+  await db.collection("events").doc(id).update({
+    active: !isActive
   });
 
-  populateCheckInEventSelect();
-}
-
-async function updateEventStatus(id, status) {
-  await db.collection("events").doc(id).update({ status });
   loadTeacherEvents();
 }
-window.updateEventStatus = updateEventStatus;
 
 async function deleteEvent(id) {
-  if (!confirm("Delete this event?")) return;
   await db.collection("events").doc(id).delete();
   loadTeacherEvents();
 }
-window.deleteEvent = deleteEvent;
 
-// === 9. TEACHER: CHECK-IN =================================================
-
-async function populateCheckInEventSelect() {
+/* ============================================================
+   TEACHER / ADMIN — CHECK-IN
+   ============================================================ */
+async function loadCheckInEventList() {
+  const snap = await db.collection("events").where("active", "==", true).get();
   const select = document.getElementById("checkInEventSelect");
-  const eventsSnap = await db
-    .collection("events")
-    .where("status", "==", "active")
-    .get();
-  const events = eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
   select.innerHTML = "";
-  events.forEach((ev) => {
-    const opt = document.createElement("option");
-    opt.value = ev.id;
-    opt.textContent = `${ev.name} (${ev.date})`;
-    select.appendChild(opt);
+
+  snap.forEach((doc) => {
+    const event = doc.data();
+    const option = document.createElement("option");
+    option.value = doc.id;
+    option.textContent = event.name;
+    select.appendChild(option);
   });
+
+  loadLearnerListForCheckIn();
 }
 
-async function loadTeacherCheckIn() {
-  const eventId = document.getElementById("checkInEventSelect").value;
-  const tbody = document.querySelector("#checkInLearnersTable tbody");
+document.getElementById("checkInEventSelect").addEventListener("change", loadLearnerListForCheckIn);
+document.getElementById("filterHouse").addEventListener("change", loadLearnerListForCheckIn);
+document.getElementById("filterGrade").addEventListener("input", loadLearnerListForCheckIn);
 
-  if (!eventId) {
-    tbody.innerHTML = "<tr><td colspan='4'>No active events.</td></tr>";
-    return;
-  }
-
-  const filterGrade = document.getElementById("filterGrade").value.trim();
+async function loadLearnerListForCheckIn() {
+  const eventID = document.getElementById("checkInEventSelect").value;
   const filterHouse = document.getElementById("filterHouse").value;
+  const filterGrade = document.getElementById("filterGrade").value;
 
-  const learnersSnap = await db
-    .collection("users")
+  const usersSnap = await db.collection("users")
     .where("role", "==", "learner")
     .get();
-  let learners = learnersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-  if (filterGrade) learners = learners.filter((l) => String(l.grade) === filterGrade);
-  if (filterHouse) learners = learners.filter((l) => l.houseId === filterHouse);
-
-  const attSnap = await db
-    .collection("attendance")
-    .where("eventId", "==", eventId)
-    .get();
-  const attendance = attSnap.docs.map((d) => d.data());
-
+  const tbody = document.querySelector("#checkInLearnersTable tbody");
   tbody.innerHTML = "";
 
-  learners.forEach((l) => {
-    const checked = attendance.some((a) => a.learnerId === l.id);
-    const house = HOUSES[l.houseId];
+  for (let doc of usersSnap.docs) {
+    const user = doc.data();
 
-    tbody.innerHTML += `
+    if (filterHouse && user.house !== filterHouse) continue;
+    if (filterGrade && user.grade != filterGrade) continue;
+
+    const attDoc = await db.collection("attendance")
+      .doc(`${doc.id}_${eventID}`)
+      .get();
+
+    const status = attDoc.exists ? "✔️" : `<button onclick="checkIn('${doc.id}', '${eventID}')">Merk</button>`;
+    const houseInfo = HOUSES[user.house];
+
+    const tr = `
       <tr>
-        <td>${l.name} ${l.surname}</td>
-        <td>${l.grade}</td>
-        <td>
-          <span class="house-cell">
-            <img src="${house.logo}" class="house-logo-small" />
-            ${house.displayName}
-          </span>
+        <td>${user.name} ${user.surname}</td>
+        <td>${user.grade}</td>
+        <td class="house-cell">
+          <img src="${houseInfo.logo}" class="house-logo-small" />
+          ${houseInfo.displayName}
         </td>
-        <td>
-          ${
-            checked
-              ? '<span class="chip-status chip-ok">Checked in</span>'
-              : `<button class="btn btn-primary btn-sm" onclick="checkInLearner('${l.id}','${eventId}','${l.houseId}')">Check in</button>`
-          }
-        </td>
+        <td>${status}</td>
       </tr>
     `;
+
+    tbody.innerHTML += tr;
+  }
+}
+
+async function checkIn(uid, eventID) {
+  const userDoc = await db.collection("users").doc(uid).get();
+  const user = userDoc.data();
+
+  await db.collection("attendance").doc(`${uid}_${eventID}`).set({
+    learnerName: user.name,
+    learnerSurname: user.surname,
+    learnerHouse: user.house,
+    learnerGrade: user.grade,
+    eventID,
+    timestamp: new Date()
   });
+
+  await db.collection("points").doc(user.house).set({
+    total: firebase.firestore.FieldValue.increment(1)
+  }, { merge: true });
+
+  loadLearnerListForCheckIn();
 }
 
-async function checkInLearner(learnerId, eventId, houseId) {
-  await db
-    .collection("attendance")
-    .doc(`${eventId}_${learnerId}`)
-    .set({
-      learnerId,
-      eventId,
-      houseId,
-      timestamp: new Date().toISOString(),
-    });
-
-  loadTeacherCheckIn();
-}
-window.checkInLearner = checkInLearner;
-
-// === 10. TEACHER: HOUSE POINTS ===========================================
-
+/* ============================================================
+   ADMIN ONLY — LOAD HOUSE POINTS
+   ============================================================ */
 async function loadHousePoints() {
-  const ap = document.getElementById("houseAPoints");
-  const bp = document.getElementById("houseBPoints");
+  const aDoc = await db.collection("points").doc("houseA").get();
+  const bDoc = await db.collection("points").doc("houseB").get();
 
-  ap.textContent = "...";
-  bp.textContent = "...";
-
-  const attSnap = await db.collection("attendance").get();
-  let houseA = 0;
-  let houseB = 0;
-
-  attSnap.forEach((doc) => {
-    const data = doc.data();
-    if (data.houseId === "houseA") houseA++;
-    if (data.houseId === "houseB") houseB++;
-  });
-
-  ap.textContent = houseA;
-  bp.textContent = houseB;
+  document.getElementById("houseAPoints").innerText = aDoc.exists ? aDoc.data().total : 0;
+  document.getElementById("houseBPoints").innerText = bDoc.exists ? bDoc.data().total : 0;
 }
+
+/* ============================================================
+   TABS FOR TEACHER/ADMIN
+   ============================================================ */
+tabEvents.addEventListener("click", () => showPanel(teacherEventsPanel));
+tabCheckIn.addEventListener("click", () => showPanel(teacherCheckInPanel));
+tabPoints.addEventListener("click", () => showPanel(teacherPointsPanel));
+
+/* ============================================================
+   AUTH TABS
+   ============================================================ */
+showLogin.addEventListener("click", () => {
+  loginForm.classList.remove("hidden");
+  learnerRegisterForm.classList.add("hidden");
+  teacherRegisterForm.classList.add("hidden");
+});
+
+showLearnerRegister.addEventListener("click", () => {
+  loginForm.classList.add("hidden");
+  learnerRegisterForm.classList.remove("hidden");
+  teacherRegisterForm.classList.add("hidden");
+});
+
+showTeacherRegister.addEventListener("click", () => {
+  loginForm.classList.add("hidden");
+  learnerRegisterForm.classList.add("hidden");
+  teacherRegisterForm.classList.remove("hidden");
+});
