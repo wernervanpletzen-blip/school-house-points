@@ -40,25 +40,25 @@
             <img src="school-logo.png" alt="School logo" class="school-logo" />
           </div>
 
-          <h2 class="card-title">Welkom</h2>
+          <h2 class="card-title">Welcome</h2>
           <p class="card-subtitle">
-            Meld aan of registreer as 'n leerder of onderwyser.
+            Log in or register as a learner or teacher.
           </p>
 
           <div class="auth-tabs">
             <button class="btn btn-ghost" id="showLogin">Log in</button>
-            <button class="btn btn-ghost" id="showLearnerRegister">Leerder Registrasie</button>
-            <button class="btn btn-ghost" id="showTeacherRegister">Onderwyser Registrasie</button>
+            <button class="btn btn-ghost" id="showLearnerRegister">Learner registration</button>
+            <button class="btn btn-ghost" id="showTeacherRegister">Teacher registration</button>
           </div>
 
           <!-- Login form -->
           <form class="form-grid mt-2" id="loginForm">
             <div>
-              <div class="label">E-pos</div>
+              <div class="label">Email</div>
               <input class="input" type="email" id="loginEmail" required />
             </div>
             <div>
-              <div class="label">Wagwoord</div>
+              <div class="label">Password</div>
               <input class="input" type="password" id="loginPassword" required />
             </div>
             <div id="loginError" class="error mt-1"></div>
@@ -69,28 +69,28 @@
           <form class="form-grid mt-2 hidden" id="learnerRegisterForm">
             <div class="flex">
               <div>
-                <div class="label">Naam</div>
+                <div class="label">Name</div>
                 <input class="input" id="learnerName" required />
               </div>
               <div>
-                <div class="label">Van</div>
+                <div class="label">Surname</div>
                 <input class="input" id="learnerSurname" required />
               </div>
             </div>
 
             <div class="flex">
               <div>
-                <div class="label">Graad</div>
+                <div class="label">Grade</div>
                 <input class="input" id="learnerGrade" type="number" required />
               </div>
               <div>
-                <div class="label">Selfoon (opsioneel)</div>
+                <div class="label">Phone (optional)</div>
                 <input class="input" id="learnerPhone" />
               </div>
             </div>
 
             <div>
-              <div class="label">Huis</div>
+              <div class="label">House</div>
               <select class="select" id="learnerHouse">
                 <option value="houseA">Eerhof</option>
                 <option value="houseB">Edelhof</option>
@@ -99,61 +99,61 @@
 
             <div class="flex">
               <div>
-                <div class="label">E-pos</div>
+                <div class="label">Email</div>
                 <input class="input" id="learnerEmail" type="email" required />
               </div>
               <div>
-                <div class="label">Wagwoord</div>
+                <div class="label">Password</div>
                 <input class="input" id="learnerPassword" type="password" required />
               </div>
             </div>
 
             <div id="learnerRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Registreer Leerder</button>
+            <button class="btn btn-primary mt-2" type="submit">Register learner</button>
           </form>
 
           <!-- Teacher registration -->
           <form class="form-grid mt-2 hidden" id="teacherRegisterForm">
             <div class="flex">
               <div>
-                <div class="label">Naam</div>
+                <div class="label">Name</div>
                 <input class="input" id="teacherName" required />
               </div>
               <div>
-                <div class="label">Van</div>
+                <div class="label">Surname</div>
                 <input class="input" id="teacherSurname" required />
               </div>
             </div>
 
             <div>
-              <div class="label">E-pos</div>
+              <div class="label">Email</div>
               <input class="input" id="teacherEmail" type="email" required />
             </div>
 
             <div>
-              <div class="label">Wagwoord</div>
+              <div class="label">Password</div>
               <input class="input" id="teacherPassword" type="password" required />
             </div>
 
             <div id="teacherRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Registreer Onderwyser</button>
+            <button class="btn btn-primary mt-2" type="submit">Register teacher</button>
           </form>
         </section>
 
         <!-- ================= LEARNER DASHBOARD ================= -->
         <section class="card hidden" id="learnerDashboard">
-          <h2 class="card-title">Leerder Paneelbord</h2>
+          <h2 class="card-title">Learner dashboard</h2>
           <div class="card-subtitle" id="learnerInfo"></div>
 
-          <h3 class="mt-2">Aktiewe Gebeure</h3>
-          <p class="card-subtitle">Gaan na jou onderwyser vir teenwoordigheidskontrole.</p>
+          <h3 class="mt-2">Active events</h3>
+          <p class="card-subtitle">Your teacher will check you in at events.</p>
 
           <table class="table" id="learnerEventsTable">
             <thead>
               <tr>
-                <th>Gebeurtenis</th>
-                <th>Datum</th>
-                <th>Status</th>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Your status</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -162,41 +162,41 @@
 
         <!-- ================= TEACHER DASHBOARD ================= -->
         <section class="card hidden" id="teacherDashboard">
-          <h2 class="card-title">Onderwyser Paneelbord</h2>
-          <p class="card-subtitle">Bestuur gebeure en teenwoordigheid.</p>
+          <h2 class="card-title">Teacher dashboard</h2>
+          <p class="card-subtitle">Create events, check in learners, and view house points.</p>
 
           <div class="flex mt-1">
-            <button class="btn btn-ghost" id="tabEvents">Gebeure</button>
-            <button class="btn btn-ghost" id="tabCheckIn">Teenwoordigheid</button>
-            <button class="btn btn-ghost hidden" id="tabPoints">Huispunte</button>
-            <button class="btn btn-ghost" id="logoutButton">Log uit</button>
+            <button class="btn btn-ghost" id="tabEvents">Events</button>
+            <button class="btn btn-ghost" id="tabCheckIn">Check-in</button>
+            <button class="btn btn-ghost" id="tabPoints">House points</button>
+            <button class="btn btn-ghost" id="logoutButton">Log out</button>
           </div>
 
           <!-- Events Panel -->
           <div class="mt-2" id="teacherEventsPanel">
-            <h3>Skep Gebeurtenis</h3>
+            <h3>Create event</h3>
             <form class="form-grid mt-1" id="createEventForm">
               <div class="flex">
                 <div>
-                  <div class="label">Naam</div>
+                  <div class="label">Event name</div>
                   <input class="input" id="eventName" required />
                 </div>
                 <div>
-                  <div class="label">Datum</div>
+                  <div class="label">Date</div>
                   <input class="input" id="eventDate" type="date" required />
                 </div>
               </div>
-              <button class="btn btn-primary mt-1" type="submit">Voeg By</button>
+              <button class="btn btn-primary mt-1" type="submit">Add event</button>
             </form>
 
-            <h3 class="mt-2">Alle Gebeure</h3>
+            <h3 class="mt-2">All events</h3>
             <table class="table" id="teacherEventsTable">
               <thead>
                 <tr>
-                  <th>Gebeurtenis</th>
-                  <th>Datum</th>
+                  <th>Event</th>
+                  <th>Date</th>
                   <th>Status</th>
-                  <th>Aksies</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -205,23 +205,23 @@
 
           <!-- Check-In Panel -->
           <div class="mt-2 hidden" id="teacherCheckInPanel">
-            <h3>Merk Teenwoordigheid</h3>
+            <h3>Check-in learners</h3>
 
             <div class="flex mt-1">
               <div>
-                <div class="label">Gebeurtenis</div>
+                <div class="label">Event</div>
                 <select class="select" id="checkInEventSelect"></select>
               </div>
 
               <div>
-                <div class="label">Graad</div>
-                <input class="input" id="filterGrade" placeholder="Graad" />
+                <div class="label">Filter grade</div>
+                <input class="input" id="filterGrade" placeholder="Grade" />
               </div>
 
               <div>
-                <div class="label">Huis</div>
+                <div class="label">Filter house</div>
                 <select class="select" id="filterHouse">
-                  <option value="">Almal</option>
+                  <option value="">All</option>
                   <option value="houseA">Eerhof</option>
                   <option value="houseB">Edelhof</option>
                 </select>
@@ -231,9 +231,9 @@
             <table class="table" id="checkInLearnersTable">
               <thead>
                 <tr>
-                  <th>Leerder</th>
-                  <th>Graad</th>
-                  <th>Huis</th>
+                  <th>Learner</th>
+                  <th>Grade</th>
+                  <th>House</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -241,15 +241,15 @@
             </table>
           </div>
 
-          <!-- House Points Panel (ADMIN ONLY) -->
+          <!-- House Points Panel -->
           <div class="mt-2 hidden" id="teacherPointsPanel">
-            <h3>Huispunte (Net Admin)</h3>
-            <p class="card-subtitle">Slegs die Admin kan hierdie sien.</p>
+            <h3>House points</h3>
+            <p class="card-subtitle">These totals are only visible to teachers.</p>
 
             <div class="house-points">
               <div class="house-card">
                 <div class="house-card-header">
-                  <img src="house-a-logo.png" class="house-logo" />
+                  <img src="house-a-logo.png" alt="Eerhof logo" class="house-logo" />
                   <h4>Eerhof</h4>
                 </div>
                 <div class="points" id="houseAPoints">0</div>
@@ -257,7 +257,7 @@
 
               <div class="house-card">
                 <div class="house-card-header">
-                  <img src="house-b-logo.png" class="house-logo" />
+                  <img src="house-b-logo.png" alt="Edelhof logo" class="house-logo" />
                   <h4>Edelhof</h4>
                 </div>
                 <div class="points" id="houseBPoints">0</div>
@@ -272,12 +272,16 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("pwabuilder-sw.js");
+          navigator.serviceWorker
+            .register("pwabuilder-sw.js")
+            .catch((err) =>
+              console.log("Service Worker registration failed:", err)
+            );
         });
       }
     </script>
 
-    <!-- Main app logic -->
+    <!-- App logic -->
     <script src="app.js"></script>
   </body>
 </html>
