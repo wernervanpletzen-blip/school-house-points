@@ -1,6 +1,7 @@
 /* ============================================================
-   FIREBASE SETUP
+   1. FIREBASE SETUP
    ============================================================ */
+// 🔁 REPLACE THESE VALUES WITH YOUR REAL FIREBASE CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyCTh8EPbEHbwj-dY2wClMUfuo551wZODgs",
     authDomain: "school-house-points-de0a0.firebaseapp.com",
@@ -10,14 +11,14 @@ const firebaseConfig = {
     appId: "1:557412828404:web:d7a8f300780df81b6f4aa1"
   };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* ============================================================
-   HOUSES
+   2. GLOBALS & HELPERS
    ============================================================ */
+
 const HOUSES = {
   houseA: { displayName: "Eerhof", logo: "house-a-logo.png" },
   houseB: { displayName: "Edelhof", logo: "house-b-logo.png" },
@@ -28,9 +29,6 @@ const $ = (id) => document.getElementById(id);
 let currentUser = null;
 let currentProfile = null;
 
-/* ============================================================
-   SHOW / HIDE SECTIONS
-   ============================================================ */
 function showSection(sectionId) {
   ["authSection", "learnerDashboard", "teacherDashboard"].forEach((id) => {
     const el = $(id);
@@ -55,8 +53,9 @@ function showTeacherPanel(which) {
 }
 
 /* ============================================================
-   AUTH STATE
+   3. AUTH STATE
    ============================================================ */
+
 auth.onAuthStateChanged(async (user) => {
   currentUser = user;
 
@@ -87,10 +86,11 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 /* ============================================================
-   INIT LISTENERS
+   4. INIT LISTENERS (DOM READY)
    ============================================================ */
+
 window.addEventListener("load", () => {
-  // Auth tab buttons
+  // Auth tabs
   $("showLogin").addEventListener("click", () => showAuthForm("login"));
   $("showLearnerRegister").addEventListener("click", () => showAuthForm("learner"));
   $("showTeacherRegister").addEventListener("click", () => showAuthForm("teacher"));
@@ -117,7 +117,7 @@ window.addEventListener("load", () => {
   // Logout
   $("logoutButton").addEventListener("click", () => auth.signOut());
 
-  // Events
+  // Event creation
   $("createEventForm").addEventListener("submit", handleCreateEvent);
 
   // Check-in filters
@@ -144,8 +144,9 @@ function initTeacherDashboard() {
 }
 
 /* ============================================================
-   AUTH HANDLERS
+   5. AUTH HANDLERS
    ============================================================ */
+
 async function handleLogin(e) {
   e.preventDefault();
   const email = $("loginEmail").value.trim();
@@ -182,7 +183,7 @@ async function handleLearnerRegister(e) {
       email,
       grade,
       phone,
-      house, // houseA / houseB
+      house, // "houseA" / "houseB"
       role: "learner",
     });
   } catch (err) {
@@ -216,8 +217,9 @@ async function handleTeacherRegister(e) {
 }
 
 /* ============================================================
-   LEARNER DASHBOARD
+   6. LEARNER DASHBOARD
    ============================================================ */
+
 async function loadLearnerDashboard() {
   if (!currentProfile) return;
 
@@ -244,7 +246,7 @@ async function loadLearnerEvents() {
   tbody.innerHTML = "";
 
   try {
-    // Load all events
+    // Load ALL events (no active filter to keep it simple)
     const eventsSnap = await db.collection("events").orderBy("date").get();
 
     if (eventsSnap.empty) {
@@ -252,16 +254,16 @@ async function loadLearnerEvents() {
       return;
     }
 
-    // Load attendance docs for THIS learner
+    // Load all attendance docs for THIS learner
     const attSnap = await db
       .collection("attendance")
-      .where("learnerID", "==", currentProfile.id)
+      .where("learnerId", "==", currentProfile.id)
       .get();
 
     const attendedEventIds = new Set();
     attSnap.forEach((doc) => {
       const data = doc.data();
-      if (data.eventID) attendedEventIds.add(data.eventID);
+      if (data.eventId) attendedEventIds.add(data.eventId);
     });
 
     eventsSnap.forEach((doc) => {
@@ -284,8 +286,9 @@ async function loadLearnerEvents() {
 }
 
 /* ============================================================
-   TEACHER – EVENTS
+   7. TEACHER – EVENTS
    ============================================================ */
+
 async function handleCreateEvent(e) {
   e.preventDefault();
   const name = $("eventName").value.trim();
@@ -296,7 +299,7 @@ async function handleCreateEvent(e) {
   await db.collection("events").add({
     name,
     date,
-    active: true,
+    active: true, // we keep this for UI, but we don't rely on it for check-in
   });
 
   $("eventName").value = "";
@@ -320,7 +323,7 @@ async function loadTeacherEvents() {
       <td>${ev.date}</td>
       <td>${ev.active ? "Active" : "Closed"}</td>
       <td>
-        <button class="btn btn-primary btn-sm" onclick="toggleEvent('${doc.id}', ${ev.active})">
+        <button class="btn btn-primary btn-sm" onclick="toggleEvent('${doc.id}', ${!!ev.active})">
           ${ev.active ? "Close" : "Open"}
         </button>
         <button class="btn btn-ghost btn-sm" onclick="deleteEvent('${doc.id}')">Delete</button>
@@ -346,46 +349,39 @@ async function deleteEvent(id) {
 window.deleteEvent = deleteEvent;
 
 /* ============================================================
-   TEACHER – CHECK-IN
+   8. TEACHER – CHECK-IN
    ============================================================ */
+
 async function loadCheckInEventSelect() {
   const select = $("checkInEventSelect");
   if (!select) return;
 
   try {
-    // Simpler query: get all events and then filter in JS
+    // 👉 SUPER SIMPLE: just load ALL events
     const snap = await db.collection("events").orderBy("date").get();
 
     select.innerHTML = "";
-    const activeEvents = [];
 
-    snap.forEach((doc) => {
-      const ev = doc.data();
-      if (ev.active) {
-        activeEvents.push({ id: doc.id, ...ev });
-      }
-    });
-
-    if (!activeEvents.length) {
-      select.innerHTML = "";
+    if (snap.empty) {
       const opt = document.createElement("option");
       opt.value = "";
-      opt.textContent = "No active events";
+      opt.textContent = "No events yet";
       select.appendChild(opt);
 
       const tbody = document.querySelector("#checkInLearnersTable tbody");
-      tbody.innerHTML = `<tr><td colspan="4">No active events.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4">No events available.</td></tr>`;
       return;
     }
 
-    activeEvents.forEach((ev) => {
+    snap.forEach((doc) => {
+      const ev = doc.data();
       const opt = document.createElement("option");
-      opt.value = ev.id;
+      opt.value = doc.id;
       opt.textContent = `${ev.name} (${ev.date})`;
       select.appendChild(opt);
     });
 
-    // Load learners for the first active event by default
+    // Load learners for the first event
     loadLearnersForCheckIn();
   } catch (err) {
     console.error("Error loading events for check-in:", err);
@@ -406,7 +402,7 @@ async function loadLearnersForCheckIn() {
   tbody.innerHTML = "";
 
   if (!eventID) {
-    tbody.innerHTML = `<tr><td colspan="4">No active events.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4">No events selected.</td></tr>`;
     return;
   }
 
@@ -414,7 +410,7 @@ async function loadLearnersForCheckIn() {
   const filterHouse = $("filterHouse").value;
 
   try {
-    // Get all learners
+    // Load ALL learners
     const usersSnap = await db
       .collection("users")
       .where("role", "==", "learner")
@@ -425,10 +421,10 @@ async function loadLearnersForCheckIn() {
     if (filterGrade) learners = learners.filter((l) => String(l.grade) === filterGrade);
     if (filterHouse) learners = learners.filter((l) => l.house === filterHouse);
 
-    // Get attendance for the selected event
+    // Load attendance for this event
     const attSnap = await db
       .collection("attendance")
-      .where("eventID", "==", eventID)
+      .where("eventId", "==", eventID)
       .get();
     const attendance = attSnap.docs.map((d) => d.data());
 
@@ -438,7 +434,7 @@ async function loadLearnersForCheckIn() {
     }
 
     learners.forEach((l) => {
-      const checked = attendance.some((a) => a.learnerID === l.id);
+      const checked = attendance.some((a) => a.learnerId === l.id);
       const houseInfo = HOUSES[l.house] || {
         displayName: "House",
         logo: "house-a-logo.png",
@@ -472,10 +468,10 @@ async function checkIn(uid, eventID) {
   const userDoc = await db.collection("users").doc(uid).get();
   const user = userDoc.data();
 
-  // Record attendance
-  await db.collection("attendance").doc(`${uid}_${eventID}`).set({
-    learnerID: uid,
-    eventID,
+  // Record attendance – ***consistent field names*** 👇
+  await db.collection("attendance").doc(`${eventID}_${uid}`).set({
+    learnerId: uid,
+    eventId: eventID,
     learnerName: user.name,
     learnerSurname: user.surname,
     house: user.house,
@@ -499,8 +495,9 @@ async function checkIn(uid, eventID) {
 window.checkIn = checkIn;
 
 /* ============================================================
-   TEACHER – HOUSE POINTS
+   9. TEACHER – HOUSE POINTS
    ============================================================ */
+
 async function loadHousePoints() {
   const aDoc = await db.collection("points").doc("houseA").get();
   const bDoc = await db.collection("points").doc("houseB").get();
