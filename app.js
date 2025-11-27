@@ -3,13 +3,13 @@
    Replace this config with YOUR Firebase project config
    ============================================================ */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+    apiKey: "AIzaSyCTh8EPbEHbwj-dY2wClMUfuo551wZODgs",
+    authDomain: "school-house-points-de0a0.firebaseapp.com",
+    projectId: "school-house-points-de0a0",
+    storageBucket: "school-house-points-de0a0.firebasestorage.app",
+    messagingSenderId: "557412828404",
+    appId: "1:557412828404:web:d7a8f300780df81b6f4aa1"
+  };
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
