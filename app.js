@@ -182,7 +182,7 @@ async function handleLearnerRegister(e) {
       email,
       grade,
       phone,
-      house, // "houseA" or "houseB"
+      house, // houseA / houseB
       role: "learner",
     });
   } catch (err) {
@@ -244,7 +244,7 @@ async function loadLearnerEvents() {
   tbody.innerHTML = "";
 
   try {
-    // 1) Load all events
+    // Load all events
     const eventsSnap = await db.collection("events").orderBy("date").get();
 
     if (eventsSnap.empty) {
@@ -252,7 +252,7 @@ async function loadLearnerEvents() {
       return;
     }
 
-    // 2) Load all attendance docs for THIS learner once
+    // Load all attendance docs for THIS learner once
     const attSnap = await db
       .collection("attendance")
       .where("learnerID", "==", currentProfile.id)
@@ -264,7 +264,7 @@ async function loadLearnerEvents() {
       if (data.eventID) attendedEventIds.add(data.eventID);
     });
 
-    // 3) Build table rows
+    // Build table rows
     eventsSnap.forEach((doc) => {
       const ev = doc.data();
       const hasAttendance = attendedEventIds.has(doc.id);
@@ -384,49 +384,54 @@ async function loadLearnersForCheckIn() {
   const filterGrade = $("filterGrade").value.trim();
   const filterHouse = $("filterHouse").value;
 
-  const usersSnap = await db
-    .collection("users")
-    .where("role", "==", "learner")
-    .get();
+  try {
+    const usersSnap = await db
+      .collection("users")
+      .where("role", "==", "learner")
+      .get();
 
-  let learners = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    let learners = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-  if (filterGrade) learners = learners.filter((l) => String(l.grade) === filterGrade);
-  if (filterHouse) learners = learners.filter((l) => l.house === filterHouse);
+    if (filterGrade) learners = learners.filter((l) => String(l.grade) === filterGrade);
+    if (filterHouse) learners = learners.filter((l) => l.house === filterHouse);
 
-  const attSnap = await db
-    .collection("attendance")
-    .where("eventID", "==", eventID)
-    .get();
-  const attendance = attSnap.docs.map((d) => d.data());
+    const attSnap = await db
+      .collection("attendance")
+      .where("eventID", "==", eventID)
+      .get();
+    const attendance = attSnap.docs.map((d) => d.data());
 
-  if (!learners.length) {
-    tbody.innerHTML = `<tr><td colspan="4">No learners found.</td></tr>`;
-    return;
+    if (!learners.length) {
+      tbody.innerHTML = `<tr><td colspan="4">No learners found.</td></tr>`;
+      return;
+    }
+
+    learners.forEach((l) => {
+      const checked = attendance.some((a) => a.learnerID === l.id);
+      const houseInfo = HOUSES[l.house] || { displayName: "House", logo: "house-a-logo.png" };
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${l.name} ${l.surname}</td>
+        <td>${l.grade}</td>
+        <td class="house-cell">
+          <img src="${houseInfo.logo}" class="house-logo-small" />
+          ${houseInfo.displayName}
+        </td>
+        <td>
+          ${
+            checked
+              ? '<span class="chip-status chip-ok">Checked in</span>'
+              : `<button class="btn btn-primary btn-sm" onclick="checkIn('${l.id}','${eventID}')">Check in</button>`
+          }
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Error loading learners for check-in:", err);
+    tbody.innerHTML = `<tr><td colspan="4">Error loading learners.</td></tr>`;
   }
-
-  learners.forEach((l) => {
-    const checked = attendance.some((a) => a.learnerID === l.id);
-    const houseInfo = HOUSES[l.house] || { displayName: "House", logo: "house-a-logo.png" };
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${l.name} ${l.surname}</td>
-      <td>${l.grade}</td>
-      <td class="house-cell">
-        <img src="${houseInfo.logo}" class="house-logo-small" />
-        ${houseInfo.displayName}
-      </td>
-      <td>
-        ${
-          checked
-            ? '<span class="chip-status chip-ok">Checked in</span>'
-            : `<button class="btn btn-primary btn-sm" onclick="checkIn('${l.id}','${eventID}')">Check in</button>`
-        }
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
 async function checkIn(uid, eventID) {
