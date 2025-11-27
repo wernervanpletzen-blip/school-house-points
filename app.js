@@ -124,6 +124,12 @@ window.addEventListener("load", () => {
   $("filterGrade").addEventListener("input", loadLearnersForCheckIn);
   $("filterHouse").addEventListener("change", loadLearnersForCheckIn);
   $("checkInEventSelect").addEventListener("change", loadLearnersForCheckIn);
+
+  // 🔍 NEW: name search filter
+  const nameInput = $("filterName");
+  if (nameInput) {
+    nameInput.addEventListener("input", loadLearnersForCheckIn);
+  }
 });
 
 function showAuthForm(which) {
@@ -246,7 +252,7 @@ async function loadLearnerEvents() {
   tbody.innerHTML = "";
 
   try {
-    // Load ALL events (no active filter to keep it simple)
+    // Load ALL events
     const eventsSnap = await db.collection("events").orderBy("date").get();
 
     if (eventsSnap.empty) {
@@ -254,7 +260,7 @@ async function loadLearnerEvents() {
       return;
     }
 
-    // Load all attendance docs for THIS learner
+    // Load attendance docs for THIS learner
     const attSnap = await db
       .collection("attendance")
       .where("learnerId", "==", currentProfile.id)
@@ -299,7 +305,7 @@ async function handleCreateEvent(e) {
   await db.collection("events").add({
     name,
     date,
-    active: true, // we keep this for UI, but we don't rely on it for check-in
+    active: true,
   });
 
   $("eventName").value = "";
@@ -357,7 +363,6 @@ async function loadCheckInEventSelect() {
   if (!select) return;
 
   try {
-    // 👉 SUPER SIMPLE: just load ALL events
     const snap = await db.collection("events").orderBy("date").get();
 
     select.innerHTML = "";
@@ -381,7 +386,6 @@ async function loadCheckInEventSelect() {
       select.appendChild(opt);
     });
 
-    // Load learners for the first event
     loadLearnersForCheckIn();
   } catch (err) {
     console.error("Error loading events for check-in:", err);
@@ -408,9 +412,10 @@ async function loadLearnersForCheckIn() {
 
   const filterGrade = $("filterGrade").value.trim();
   const filterHouse = $("filterHouse").value;
+  const filterName = ($("filterName")?.value || "").trim().toLowerCase(); // 🔍 NEW
 
   try {
-    // Load ALL learners
+    // Get all learners
     const usersSnap = await db
       .collection("users")
       .where("role", "==", "learner")
@@ -418,10 +423,21 @@ async function loadLearnersForCheckIn() {
 
     let learners = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    if (filterGrade) learners = learners.filter((l) => String(l.grade) === filterGrade);
-    if (filterHouse) learners = learners.filter((l) => l.house === filterHouse);
+    if (filterGrade) {
+      learners = learners.filter((l) => String(l.grade) === filterGrade);
+    }
 
-    // Load attendance for this event
+    if (filterHouse) {
+      learners = learners.filter((l) => l.house === filterHouse);
+    }
+
+    if (filterName) {
+      learners = learners.filter((l) => {
+        const fullName = `${l.name || ""} ${l.surname || ""}`.toLowerCase();
+        return fullName.includes(filterName);
+      });
+    }
+
     const attSnap = await db
       .collection("attendance")
       .where("eventId", "==", eventID)
@@ -468,7 +484,6 @@ async function checkIn(uid, eventID) {
   const userDoc = await db.collection("users").doc(uid).get();
   const user = userDoc.data();
 
-  // Record attendance – ***consistent field names*** 👇
   await db.collection("attendance").doc(`${eventID}_${uid}`).set({
     learnerId: uid,
     eventId: eventID,
@@ -479,7 +494,6 @@ async function checkIn(uid, eventID) {
     timestamp: new Date().toISOString(),
   });
 
-  // Update points per house
   await db
     .collection("points")
     .doc(user.house)
