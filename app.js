@@ -252,7 +252,7 @@ async function loadLearnerEvents() {
       return;
     }
 
-    // Load all attendance docs for THIS learner once
+    // Load attendance docs for THIS learner
     const attSnap = await db
       .collection("attendance")
       .where("learnerID", "==", currentProfile.id)
@@ -264,7 +264,6 @@ async function loadLearnerEvents() {
       if (data.eventID) attendedEventIds.add(data.eventID);
     });
 
-    // Build table rows
     eventsSnap.forEach((doc) => {
       const ev = doc.data();
       const hasAttendance = attendedEventIds.has(doc.id);
@@ -353,22 +352,52 @@ async function loadCheckInEventSelect() {
   const select = $("checkInEventSelect");
   if (!select) return;
 
-  const snap = await db
-    .collection("events")
-    .where("active", "==", true)
-    .orderBy("date")
-    .get();
+  try {
+    // Simpler query: get all events and then filter in JS
+    const snap = await db.collection("events").orderBy("date").get();
 
-  select.innerHTML = "";
-  snap.forEach((doc) => {
-    const ev = doc.data();
+    select.innerHTML = "";
+    const activeEvents = [];
+
+    snap.forEach((doc) => {
+      const ev = doc.data();
+      if (ev.active) {
+        activeEvents.push({ id: doc.id, ...ev });
+      }
+    });
+
+    if (!activeEvents.length) {
+      select.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No active events";
+      select.appendChild(opt);
+
+      const tbody = document.querySelector("#checkInLearnersTable tbody");
+      tbody.innerHTML = `<tr><td colspan="4">No active events.</td></tr>`;
+      return;
+    }
+
+    activeEvents.forEach((ev) => {
+      const opt = document.createElement("option");
+      opt.value = ev.id;
+      opt.textContent = `${ev.name} (${ev.date})`;
+      select.appendChild(opt);
+    });
+
+    // Load learners for the first active event by default
+    loadLearnersForCheckIn();
+  } catch (err) {
+    console.error("Error loading events for check-in:", err);
+    select.innerHTML = "";
     const opt = document.createElement("option");
-    opt.value = doc.id;
-    opt.textContent = `${ev.name} (${ev.date})`;
+    opt.value = "";
+    opt.textContent = "Error loading events";
     select.appendChild(opt);
-  });
 
-  loadLearnersForCheckIn();
+    const tbody = document.querySelector("#checkInLearnersTable tbody");
+    tbody.innerHTML = `<tr><td colspan="4">Error loading events.</td></tr>`;
+  }
 }
 
 async function loadLearnersForCheckIn() {
@@ -385,6 +414,7 @@ async function loadLearnersForCheckIn() {
   const filterHouse = $("filterHouse").value;
 
   try {
+    // Get all learners
     const usersSnap = await db
       .collection("users")
       .where("role", "==", "learner")
@@ -395,6 +425,7 @@ async function loadLearnersForCheckIn() {
     if (filterGrade) learners = learners.filter((l) => String(l.grade) === filterGrade);
     if (filterHouse) learners = learners.filter((l) => l.house === filterHouse);
 
+    // Get attendance for the selected event
     const attSnap = await db
       .collection("attendance")
       .where("eventID", "==", eventID)
@@ -408,7 +439,10 @@ async function loadLearnersForCheckIn() {
 
     learners.forEach((l) => {
       const checked = attendance.some((a) => a.learnerID === l.id);
-      const houseInfo = HOUSES[l.house] || { displayName: "House", logo: "house-a-logo.png" };
+      const houseInfo = HOUSES[l.house] || {
+        displayName: "House",
+        logo: "house-a-logo.png",
+      };
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
