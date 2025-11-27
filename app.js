@@ -182,7 +182,7 @@ async function handleLearnerRegister(e) {
       email,
       grade,
       phone,
-      house, // houseA / houseB
+      house, // "houseA" or "houseB"
       role: "learner",
     });
   } catch (err) {
@@ -244,22 +244,31 @@ async function loadLearnerEvents() {
   tbody.innerHTML = "";
 
   try {
-    const eventsSnap = await db.collection("events").get();
+    // 1) Load all events
+    const eventsSnap = await db.collection("events").orderBy("date").get();
 
     if (eventsSnap.empty) {
       tbody.innerHTML = `<tr><td colspan="3">No events yet.</td></tr>`;
       return;
     }
 
-    for (const doc of eventsSnap.docs) {
+    // 2) Load all attendance docs for THIS learner once
+    const attSnap = await db
+      .collection("attendance")
+      .where("learnerID", "==", currentProfile.id)
+      .get();
+
+    const attendedEventIds = new Set();
+    attSnap.forEach((doc) => {
+      const data = doc.data();
+      if (data.eventID) attendedEventIds.add(data.eventID);
+    });
+
+    // 3) Build table rows
+    eventsSnap.forEach((doc) => {
       const ev = doc.data();
-
-      const attDoc = await db
-        .collection("attendance")
-        .doc(`${currentProfile.id}_${doc.id}`)
-        .get();
-
-      const status = attDoc.exists ? "Checked in" : "Not checked in";
+      const hasAttendance = attendedEventIds.has(doc.id);
+      const status = hasAttendance ? "Checked in" : "Not checked in";
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -268,7 +277,7 @@ async function loadLearnerEvents() {
         <td>${status}</td>
       `;
       tbody.appendChild(tr);
-    }
+    });
   } catch (err) {
     console.error("Error loading learner events:", err);
     tbody.innerHTML = `<tr><td colspan="3">Error loading events.</td></tr>`;
