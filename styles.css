@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------ */
-/* GLOBAL COLOR SYSTEM – Bottle Green + Gold                    */
+/* GLOBAL COLORS – Bottle Green + Gold                          */
 /* ------------------------------------------------------------ */
 
 :root {
@@ -18,43 +18,140 @@
 }
 
 /* ------------------------------------------------------------ */
-/* GENERAL LAYOUT                                               */
+/* BASE LAYOUT                                                  */
 /* ------------------------------------------------------------ */
 
 body {
   margin: 0;
   background: var(--green);
   color: var(--text-light);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 .app-shell {
-  max-width: 760px;
+  max-width: 780px;
   margin: auto;
   padding-bottom: 3rem;
 }
 
-/* HEADER */
+/* ------------------------------------------------------------ */
+/* PREMIUM HEADER                                               */
+/* ------------------------------------------------------------ */
 
 .app-header {
   background: var(--green-light);
-  padding: 1rem;
-  text-align: center;
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 2px solid var(--gold-soft);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.header-logo {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(255,255,255,0.85);
+  border: 2px solid white;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
 
 .app-header-title {
-  font-size: 1.6rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--gold);
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .header-right {
-  margin-top: 0.25rem;
   font-size: 0.9rem;
   opacity: 0.85;
+}
+
+/* ------------------------------------------------------------ */
+/* FORMS + INPUTS                                               */
+/* ------------------------------------------------------------ */
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  background: var(--input-bg);
+  box-sizing: border-box;
+}
+
+.label {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 0.25rem;
+}
+
+/* FLEX FIX */
+.flex {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.flex > div {
+  flex: 1 1 0;
+}
+
+/* SMALL SCREEN FORM FIX */
+@media (max-width: 640px) {
+  .flex {
+    flex-direction: column;
+  }
+}
+
+/* ------------------------------------------------------------ */
+/* BUTTONS                                                      */
+/* ------------------------------------------------------------ */
+
+.btn {
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--gold-soft);
+  color: black;
+}
+.btn-primary:hover {
+  background: var(--gold);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+}
+.btn-ghost:hover {
+  opacity: 0.7;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* ------------------------------------------------------------ */
@@ -68,18 +165,16 @@ body {
   border-radius: 16px;
   padding: 1.4rem;
   margin: 1.4rem;
-  animation: fadeIn 0.4s ease-out;
 }
 
 .card-title {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  margin-bottom: 0.2rem;
 }
 
 .card-subtitle {
-  font-size: 0.9rem;
   opacity: 0.85;
+  font-size: 0.95rem;
 }
 
 /* ------------------------------------------------------------ */
@@ -94,103 +189,11 @@ body {
 .school-logo {
   max-height: 130px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
-  animation: fadeIn 0.7s ease;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
 }
 
 /* ------------------------------------------------------------ */
-/* INPUTS / SELECT                                               */
-/* ------------------------------------------------------------ */
-
-.input,
-.select {
-  width: 100%;
-  padding: 0.55rem 0.7rem;
-  border-radius: 8px;
-  border: none;
-  color: var(--text-light);
-  background: var(--input-bg);
-  box-sizing: border-box;
-}
-
-.label {
-  font-size: 0.85rem;
-  opacity: 0.85;
-  margin-bottom: 0.25rem;
-}
-
-/* ------------------------------------------------------------ */
-/* BUTTONS                                                       */
-/* ------------------------------------------------------------ */
-
-.btn {
-  border: none;
-  padding: 0.55rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  color: white;
-}
-
-.btn-primary {
-  background: var(--gold-soft);
-  color: black;
-}
-
-.btn-primary:hover {
-  background: var(--gold);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--gold);
-}
-
-.btn-ghost:hover {
-  opacity: 0.7;
-}
-
-/* Tabs in auth area */
-.auth-tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.8rem;
-  flex-wrap: wrap;
-}
-
-/* ------------------------------------------------------------ */
-/* FLEX LAYOUT (FIX OVERLAPPING FIELDS)                         */
-/* ------------------------------------------------------------ */
-
-.flex {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap; /* allow wrapping on small screens */
-}
-
-.flex > div {
-  flex: 1 1 0;
-}
-
-/* On small screens, stack fields vertically */
-@media (max-width: 640px) {
-  .card {
-    margin: 1rem;
-    padding: 1.1rem;
-  }
-
-  .flex {
-    flex-direction: column;
-    gap: 0.7rem;
-  }
-
-  .flex > div {
-    width: 100%;
-  }
-}
-
-/* ------------------------------------------------------------ */
-/* HOUSE LOGOS + CARDS                                          */
+/* HOUSE LOGOS                                                  */
 /* ------------------------------------------------------------ */
 
 .house-logo {
@@ -198,30 +201,29 @@ body {
   width: 50px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.9); /* WHITE BORDER */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 3px solid white;   /* WHITE BORDER */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .house-logo-small {
   height: 28px;
   width: 28px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.9); /* WHITE BORDER */
   object-fit: cover;
+  border: 2px solid white;   /* WHITE BORDER */
 }
 
 .house-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255,255,255,0.06);
   padding: 1rem;
   border-radius: 12px;
   border: 1px solid var(--gold-soft);
-  margin-bottom: 1rem;
 }
 
 .house-card-header {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.8rem;
 }
 
 .house-points {
@@ -239,24 +241,23 @@ body {
   align-items: center;
   gap: 1rem;
   padding: 0.6rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-.learner-header-text .learner-name {
+.learner-name {
   font-size: 1.15rem;
   font-weight: 600;
 }
 
-.learner-header-text .learner-meta {
+.learner-meta {
+  opacity: 0.85;
   font-size: 0.9rem;
-  opacity: 0.8;
 }
 
-/* House cell in check-in table */
 .house-cell {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 /* ------------------------------------------------------------ */
@@ -266,15 +267,14 @@ body {
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.8rem;
+  margin-top: 1rem;
 }
 
 .table th,
 .table td {
-  text-align: left;
   padding: 0.6rem 0.4rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.92rem;
 }
 
 .chip-status {
@@ -299,25 +299,14 @@ body {
   display: none;
 }
 
-.mt-1 {
-  margin-top: 1rem;
-}
-
-.mt-2 {
-  margin-top: 2rem;
-}
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
 
 /* ------------------------------------------------------------ */
 /* ANIMATIONS                                                   */
 /* ------------------------------------------------------------ */
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
