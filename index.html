@@ -153,17 +153,174 @@
           </div>
         </section>
 
+        <section class="card hidden" id="passwordChangeSection">
+          <p class="eyebrow">ACCOUNT SECURITY</p>
+          <h1 class="card-title">Choose a new password</h1>
+          <p class="card-subtitle">
+            Your administrator gave you a temporary password. Set a new password to continue.
+          </p>
+          <form class="form-grid mt-2" id="passwordChangeForm">
+            <div>
+              <label class="label" for="currentPassword">Temporary password</label>
+              <input class="input" id="currentPassword" type="password" autocomplete="current-password" required />
+            </div>
+            <div>
+              <label class="label" for="newPassword">New password</label>
+              <input class="input" id="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+            </div>
+            <div>
+              <label class="label" for="confirmNewPassword">Confirm new password</label>
+              <input class="input" id="confirmNewPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+            </div>
+            <div id="passwordChangeError" class="error" role="alert" aria-live="polite"></div>
+            <button class="btn btn-primary auth-submit mt-1" type="submit">Update password</button>
+            <button class="btn btn-ghost" id="passwordChangeLogout" type="button">Log out</button>
+          </form>
+        </section>
+
+        <section class="card hidden" id="adminDashboard">
+          <p class="eyebrow">ADMINISTRATION</p>
+          <h1 class="card-title">Administrator dashboard</h1>
+          <p class="card-subtitle">Manage accounts and review house totals.</p>
+
+          <nav class="teacher-nav mt-1" aria-label="Administrator sections">
+            <button class="btn btn-ghost is-active" id="adminTabUsers" type="button" aria-pressed="true">Accounts</button>
+            <button class="btn btn-ghost" id="adminTabPoints" type="button" aria-pressed="false">House points</button>
+            <button class="btn btn-ghost" id="adminLogoutButton" type="button">Log out</button>
+          </nav>
+
+          <div class="mt-2" id="adminUsersPanel">
+            <h2 class="section-title">Add a teacher</h2>
+            <p class="card-subtitle">They will be asked to change this temporary password when they first sign in.</p>
+            <form class="form-grid mt-1" id="adminCreateTeacherForm">
+              <div class="flex">
+                <div>
+                  <label class="label" for="adminTeacherName">First name</label>
+                  <input class="input" id="adminTeacherName" autocomplete="given-name" required />
+                </div>
+                <div>
+                  <label class="label" for="adminTeacherSurname">Surname</label>
+                  <input class="input" id="adminTeacherSurname" autocomplete="family-name" required />
+                </div>
+              </div>
+              <div>
+                <label class="label" for="adminTeacherEmail">Email address</label>
+                <input class="input" id="adminTeacherEmail" type="email" autocomplete="email" required />
+              </div>
+              <div>
+                <label class="label" for="adminTeacherPassword">Temporary password</label>
+                <input class="input" id="adminTeacherPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+              </div>
+              <div id="adminCreateTeacherError" class="error" role="alert" aria-live="polite"></div>
+              <button class="btn btn-primary mt-1" type="submit">Create teacher account</button>
+            </form>
+
+            <h2 class="section-title mt-2">Learners and teachers</h2>
+            <div class="mt-1">
+              <label class="label" for="adminUserSearch">Search accounts</label>
+              <input class="input" id="adminUserSearch" type="search" placeholder="Search name or email" />
+            </div>
+            <div id="adminUsersError" class="error mt-1" role="alert" aria-live="polite"></div>
+            <div class="table-scroll">
+              <table class="table" id="adminUsersTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Grade / house</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mt-2 hidden" id="adminPointsPanel">
+            <h2 class="section-title">House points</h2>
+            <p class="card-subtitle">Only administrators can view these totals.</p>
+            <div id="adminPointsError" class="error mt-1" role="alert" aria-live="polite"></div>
+            <div class="house-points">
+              <div class="house-card">
+                <div class="house-card-header">
+                  <img src="house-a-logo.png" alt="Eerhof logo" class="house-logo" />
+                  <h4>Eerhof</h4>
+                </div>
+                <div class="points" id="adminHouseAPoints">—</div>
+              </div>
+              <div class="house-card">
+                <div class="house-card-header">
+                  <img src="house-b-logo.png" alt="Edelhof logo" class="house-logo" />
+                  <h4>Edelhof</h4>
+                </div>
+                <div class="points" id="adminHouseBPoints">—</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <dialog class="account-dialog" id="editAccountDialog" aria-labelledby="editAccountTitle">
+          <form class="form-grid" id="editAccountForm">
+            <h2 class="section-title" id="editAccountTitle">Edit account</h2>
+            <input id="editAccountId" type="hidden" />
+            <input id="editAccountRole" type="hidden" />
+            <div>
+              <label class="label" for="editAccountName">First name</label>
+              <input class="input" id="editAccountName" required />
+            </div>
+            <div>
+              <label class="label" for="editAccountSurname">Surname</label>
+              <input class="input" id="editAccountSurname" required />
+            </div>
+            <div>
+              <label class="label" for="editAccountEmail">Email address</label>
+              <input class="input" id="editAccountEmail" type="email" required />
+            </div>
+            <div id="editLearnerFields">
+              <div>
+                <label class="label" for="editAccountGrade">Grade</label>
+                <input class="input" id="editAccountGrade" type="number" min="0" max="12" step="1" required />
+              </div>
+              <div class="mt-1">
+                <label class="label" for="editAccountHouse">House</label>
+                <select class="select" id="editAccountHouse">
+                  <option value="houseA">Eerhof</option>
+                  <option value="houseB">Edelhof</option>
+                </select>
+              </div>
+            </div>
+            <div id="editAccountError" class="error" role="alert" aria-live="polite"></div>
+            <button class="btn btn-primary" type="submit">Save changes</button>
+            <button class="btn btn-ghost" id="cancelEditAccount" type="button">Cancel</button>
+          </form>
+        </dialog>
+
+        <dialog class="account-dialog" id="resetPasswordDialog" aria-labelledby="resetPasswordTitle">
+          <form class="form-grid" id="resetPasswordForm">
+            <h2 class="section-title" id="resetPasswordTitle">Set a temporary password</h2>
+            <p class="card-subtitle">This will sign the account out. They must choose a new password after their next sign-in.</p>
+            <input id="resetPasswordUserId" type="hidden" />
+            <div>
+              <label class="label" for="resetTemporaryPassword">Temporary password</label>
+              <input class="input" id="resetTemporaryPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+            </div>
+            <div id="resetPasswordError" class="error" role="alert" aria-live="polite"></div>
+            <button class="btn btn-primary" type="submit">Reset password</button>
+            <button class="btn btn-ghost" id="cancelResetPassword" type="button">Cancel</button>
+          </form>
+        </dialog>
+
         <section class="card hidden" id="teacherDashboard">
           <p class="eyebrow">STAFF WORKSPACE</p>
           <h1 class="card-title">Teacher dashboard</h1>
           <p class="card-subtitle">
-            Create events, check in learners, and view house points.
+            Create events and check in learners.
           </p>
 
           <nav class="teacher-nav mt-1" aria-label="Teacher dashboard sections">
             <button class="btn btn-ghost is-active" id="tabEvents" type="button" aria-pressed="true">Events</button>
             <button class="btn btn-ghost" id="tabCheckIn" type="button" aria-pressed="false">Check-in</button>
-            <button class="btn btn-ghost" id="tabPoints" type="button" aria-pressed="false">House points</button>
             <button class="btn btn-ghost" id="logoutButton" type="button">Log out</button>
           </nav>
 
@@ -248,38 +405,6 @@
             </div>
           </div>
 
-          <div class="mt-2 hidden" id="teacherPointsPanel">
-            <h2 class="section-title">House points</h2>
-            <p class="card-subtitle">
-              These totals are only visible to teachers.
-            </p>
-
-            <div class="house-points">
-              <div class="house-card">
-                <div class="house-card-header">
-                  <img
-                    src="house-a-logo.png"
-                    alt="Eerhof logo"
-                    class="house-logo"
-                  />
-                  <h4>Eerhof</h4>
-                </div>
-                <div class="points" id="houseAPoints">0</div>
-              </div>
-
-              <div class="house-card">
-                <div class="house-card-header">
-                  <img
-                    src="house-b-logo.png"
-                    alt="Edelhof logo"
-                    class="house-logo"
-                  />
-                  <h4>Edelhof</h4>
-                </div>
-                <div class="points" id="houseBPoints">0</div>
-              </div>
-            </div>
-          </div>
         </section>
       </main>
     </div>
