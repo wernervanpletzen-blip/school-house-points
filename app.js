@@ -172,6 +172,14 @@ window.addEventListener("load", () => {
     showAdminPanel("points");
     loadHousePoints();
   });
+  $("adminTeacherToolsButton").addEventListener("click", () => {
+    showSection("teacherDashboard");
+    initTeacherDashboard();
+  });
+  $("adminReturnButton").addEventListener("click", () => {
+    showSection("adminDashboard");
+    initAdminDashboard();
+  });
   $("adminLogoutButton").addEventListener("click", handleLogout);
   $("adminCreateTeacherForm").addEventListener("submit", handleAdminCreateTeacher);
   $("adminUserSearch").addEventListener("input", renderAdminUsers);
@@ -286,6 +294,10 @@ async function handleLogout() {
 
 function initTeacherDashboard() {
   showTeacherPanel("events");
+  $("adminReturnButton").classList.toggle(
+    "hidden",
+    currentProfile.role !== "administrator",
+  );
   loadTeacherEvents();
   loadCheckInEventSelect();
 }
