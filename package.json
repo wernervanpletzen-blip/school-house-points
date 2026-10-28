@@ -1,0 +1,23 @@
+{
+  "name": "school-house-points-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend API for School House Points",
+  "main": "api/server.js",
+  "scripts": {
+    "start": "node api/server.js",
+    "create-teacher": "node scripts/create-teacher.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.14.1"
+  }
+}

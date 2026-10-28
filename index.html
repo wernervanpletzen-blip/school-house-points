@@ -1,96 +1,104 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Leeuwenhof Huispunte</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json" />
 
     <!-- Theme color -->
-    <meta name="theme-color" content="#064420" />
+    <meta name="theme-color" content="#082f24" />
+    <meta name="color-scheme" content="light" />
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css" />
-
-    <!-- Firebase (compat version) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   </head>
 
   <body>
     <div class="app-shell">
-
-      <!-- ================= PREMIUM HEADER ================= -->
       <header class="app-header">
         <div class="header-left">
           <img src="school-logo.png" alt="School logo" class="header-logo" />
-          <div class="app-header-title">Leeuwenhof Huispunte</div>
+          <div>
+            <div class="app-header-title">Leeuwenhof</div>
+            <div class="app-header-caption">Huispunte</div>
+          </div>
         </div>
         <div class="header-right" id="headerUserInfo"></div>
       </header>
 
       <main class="app-main">
-
-        <!-- ================= AUTH SECTION ================= -->
         <section class="card" id="authSection">
           <div class="school-logo-wrapper">
             <img src="school-logo.png" alt="School logo" class="school-logo" />
           </div>
 
-          <h2 class="card-title">Welcome</h2>
-          <p class="card-subtitle">
-            Log in or register as a learner or teacher.
-          </p>
-
-          <div class="auth-tabs">
-            <button class="btn btn-ghost" id="showLogin">Log in</button>
-            <button class="btn btn-ghost" id="showLearnerRegister">Learner registration</button>
-            <button class="btn btn-ghost" id="showTeacherRegister">Teacher registration</button>
+          <div class="auth-intro">
+            <p class="eyebrow">Leeuwenhof Huispunte</p>
+            <h1 class="card-title">Welcome</h1>
+            <p class="card-subtitle">A little friendly spirit goes a long way.</p>
           </div>
 
-          <!-- Login form -->
+          <div class="auth-tabs" role="group" aria-label="Account options">
+            <button class="btn btn-ghost is-active" id="showLogin" type="button" aria-pressed="true">Log in</button>
+            <button class="btn btn-ghost" id="showLearnerRegister" type="button" aria-pressed="false">
+              Register
+            </button>
+          </div>
+          <p class="card-subtitle teacher-note">
+            Teacher accounts are created by the app administrator.
+          </p>
+
           <form class="form-grid mt-2" id="loginForm">
             <div>
-              <div class="label">Email</div>
-              <input class="input" type="email" id="loginEmail" required />
+              <label class="label" for="loginEmail">Email address</label>
+              <input class="input" type="email" id="loginEmail" autocomplete="username" placeholder="you@example.com" required />
             </div>
             <div>
-              <div class="label">Password</div>
-              <input class="input" type="password" id="loginPassword" required />
+              <label class="label" for="loginPassword">Password</label>
+              <input
+                class="input"
+                type="password"
+                id="loginPassword"
+                autocomplete="current-password"
+                placeholder="Your password"
+                required
+              />
             </div>
-            <div id="loginError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Log in</button>
+            <div id="loginError" class="error" role="alert" aria-live="polite"></div>
+            <button class="btn btn-primary auth-submit mt-1" type="submit">Log in</button>
           </form>
 
-          <!-- Learner registration -->
           <form class="form-grid mt-2 hidden" id="learnerRegisterForm">
             <div class="flex">
               <div>
-                <div class="label">Name</div>
-                <input class="input" id="learnerName" required />
+                <label class="label" for="learnerName">First name</label>
+                <input class="input" id="learnerName" autocomplete="given-name" required />
               </div>
               <div>
-                <div class="label">Surname</div>
-                <input class="input" id="learnerSurname" required />
-              </div>
-            </div>
-
-            <div class="flex">
-              <div>
-                <div class="label">Grade</div>
-                <input class="input" id="learnerGrade" type="number" required />
-              </div>
-              <div>
-                <div class="label">Phone (optional)</div>
-                <input class="input" id="learnerPhone" />
+                <label class="label" for="learnerSurname">Surname</label>
+                <input class="input" id="learnerSurname" autocomplete="family-name" required />
               </div>
             </div>
 
             <div>
-              <div class="label">House</div>
+              <label class="label" for="learnerGrade">Grade</label>
+              <input
+                class="input"
+                id="learnerGrade"
+                type="number"
+                min="0"
+                max="12"
+                step="1"
+                inputmode="numeric"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="label" for="learnerHouse">House</label>
               <select class="select" id="learnerHouse">
                 <option value="houseA">Eerhof</option>
                 <option value="houseB">Edelhof</option>
@@ -99,55 +107,39 @@
 
             <div class="flex">
               <div>
-                <div class="label">Email</div>
-                <input class="input" id="learnerEmail" type="email" required />
+                <label class="label" for="learnerEmail">Email address</label>
+                <input class="input" id="learnerEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
               </div>
               <div>
-                <div class="label">Password</div>
-                <input class="input" id="learnerPassword" type="password" required />
+                <label class="label" for="learnerPassword">Password</label>
+                <input
+                  class="input"
+                  id="learnerPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="At least 8 characters"
+                  minlength="8"
+                  maxlength="72"
+                  required
+                />
               </div>
             </div>
 
-            <div id="learnerRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Register learner</button>
-          </form>
-
-          <!-- Teacher registration -->
-          <form class="form-grid mt-2 hidden" id="teacherRegisterForm">
-            <div class="flex">
-              <div>
-                <div class="label">Name</div>
-                <input class="input" id="teacherName" required />
-              </div>
-              <div>
-                <div class="label">Surname</div>
-                <input class="input" id="teacherSurname" required />
-              </div>
-            </div>
-
-            <div>
-              <div class="label">Email</div>
-              <input class="input" id="teacherEmail" type="email" required />
-            </div>
-
-            <div>
-              <div class="label">Password</div>
-              <input class="input" id="teacherPassword" type="password" required />
-            </div>
-
-            <div id="teacherRegisterError" class="error mt-1"></div>
-            <button class="btn btn-primary mt-2" type="submit">Register teacher</button>
+            <div id="learnerRegisterError" class="error" role="alert" aria-live="polite"></div>
+            <button class="btn btn-primary auth-submit mt-1" type="submit">Create learner account</button>
           </form>
         </section>
 
-        <!-- ================= LEARNER DASHBOARD ================= -->
         <section class="card hidden" id="learnerDashboard">
-          <h2 class="card-title">Learner dashboard</h2>
+          <p class="eyebrow">YOUR SCHOOL COMMUNITY</p>
+          <h1 class="card-title">Learner dashboard</h1>
           <div class="card-subtitle" id="learnerInfo"></div>
+          <button class="btn btn-ghost mt-1" id="learnerLogoutButton">Log out</button>
 
-          <h3 class="mt-2">Active events</h3>
+          <h2 class="section-title mt-2">Your events</h2>
           <p class="card-subtitle">Your teacher will check you in at events.</p>
 
+          <div class="table-scroll">
           <table class="table" id="learnerEventsTable">
             <thead>
               <tr>
@@ -158,38 +150,42 @@
             </thead>
             <tbody></tbody>
           </table>
+          </div>
         </section>
 
-        <!-- ================= TEACHER DASHBOARD ================= -->
         <section class="card hidden" id="teacherDashboard">
-          <h2 class="card-title">Teacher dashboard</h2>
-          <p class="card-subtitle">Create events, check in learners, and view house points.</p>
+          <p class="eyebrow">STAFF WORKSPACE</p>
+          <h1 class="card-title">Teacher dashboard</h1>
+          <p class="card-subtitle">
+            Create events, check in learners, and view house points.
+          </p>
 
-          <div class="flex mt-1">
-            <button class="btn btn-ghost" id="tabEvents">Events</button>
-            <button class="btn btn-ghost" id="tabCheckIn">Check-in</button>
-            <button class="btn btn-ghost" id="tabPoints">House points</button>
-            <button class="btn btn-ghost" id="logoutButton">Log out</button>
-          </div>
+          <nav class="teacher-nav mt-1" aria-label="Teacher dashboard sections">
+            <button class="btn btn-ghost is-active" id="tabEvents" type="button" aria-pressed="true">Events</button>
+            <button class="btn btn-ghost" id="tabCheckIn" type="button" aria-pressed="false">Check-in</button>
+            <button class="btn btn-ghost" id="tabPoints" type="button" aria-pressed="false">House points</button>
+            <button class="btn btn-ghost" id="logoutButton" type="button">Log out</button>
+          </nav>
 
-          <!-- Events Panel -->
           <div class="mt-2" id="teacherEventsPanel">
-            <h3>Create event</h3>
+            <h2 class="section-title">Create event</h2>
             <form class="form-grid mt-1" id="createEventForm">
               <div class="flex">
                 <div>
-                  <div class="label">Event name</div>
-                  <input class="input" id="eventName" required />
+                  <label class="label" for="eventName">Event name</label>
+                  <input class="input" id="eventName" placeholder="e.g. Inter-house athletics" required />
                 </div>
                 <div>
-                  <div class="label">Date</div>
+                  <label class="label" for="eventDate">Date</label>
                   <input class="input" id="eventDate" type="date" required />
                 </div>
               </div>
+              <div id="createEventError" class="error" role="alert" aria-live="polite"></div>
               <button class="btn btn-primary mt-1" type="submit">Add event</button>
             </form>
 
-            <h3 class="mt-2">All events</h3>
+            <h2 class="section-title mt-2">All events</h2>
+            <div class="table-scroll">
             <table class="table" id="teacherEventsTable">
               <thead>
                 <tr>
@@ -201,25 +197,25 @@
               </thead>
               <tbody></tbody>
             </table>
+            </div>
           </div>
 
-          <!-- Check-In Panel -->
           <div class="mt-2 hidden" id="teacherCheckInPanel">
-            <h3>Check-in learners</h3>
+            <h2 class="section-title">Check-in learners</h2>
 
-            <div class="flex mt-1">
+            <div class="filter-grid mt-1">
               <div>
-                <div class="label">Event</div>
+                <label class="label" for="checkInEventSelect">Event</label>
                 <select class="select" id="checkInEventSelect"></select>
               </div>
 
               <div>
-                <div class="label">Filter grade</div>
-                <input class="input" id="filterGrade" placeholder="Grade" />
+                <label class="label" for="filterGrade">Filter grade</label>
+                <input class="input" id="filterGrade" placeholder="Any grade" inputmode="numeric" />
               </div>
 
               <div>
-                <div class="label">Filter house</div>
+                <label class="label" for="filterHouse">Filter house</label>
                 <select class="select" id="filterHouse">
                   <option value="">All</option>
                   <option value="houseA">Eerhof</option>
@@ -228,11 +224,16 @@
               </div>
 
               <div>
-                <div class="label">Search name</div>
-                <input class="input" id="filterName" placeholder="Type a name" />
+                <label class="label" for="filterName">Search name</label>
+                <input
+                  class="input"
+                  id="filterName"
+                  placeholder="Type a name"
+                />
               </div>
             </div>
 
+            <div class="table-scroll">
             <table class="table" id="checkInLearnersTable">
               <thead>
                 <tr>
@@ -244,17 +245,23 @@
               </thead>
               <tbody></tbody>
             </table>
+            </div>
           </div>
 
-          <!-- House Points Panel -->
           <div class="mt-2 hidden" id="teacherPointsPanel">
-            <h3>House points</h3>
-            <p class="card-subtitle">These totals are only visible to teachers.</p>
+            <h2 class="section-title">House points</h2>
+            <p class="card-subtitle">
+              These totals are only visible to teachers.
+            </p>
 
             <div class="house-points">
               <div class="house-card">
                 <div class="house-card-header">
-                  <img src="house-a-logo.png" alt="Eerhof logo" class="house-logo" />
+                  <img
+                    src="house-a-logo.png"
+                    alt="Eerhof logo"
+                    class="house-logo"
+                  />
                   <h4>Eerhof</h4>
                 </div>
                 <div class="points" id="houseAPoints">0</div>
@@ -262,7 +269,11 @@
 
               <div class="house-card">
                 <div class="house-card-header">
-                  <img src="house-b-logo.png" alt="Edelhof logo" class="house-logo" />
+                  <img
+                    src="house-b-logo.png"
+                    alt="Edelhof logo"
+                    class="house-logo"
+                  />
                   <h4>Edelhof</h4>
                 </div>
                 <div class="points" id="houseBPoints">0</div>
@@ -280,7 +291,7 @@
           navigator.serviceWorker
             .register("pwabuilder-sw.js")
             .catch((err) =>
-              console.log("Service Worker registration failed:", err)
+              console.log("Service Worker registration failed:", err),
             );
         });
       }

@@ -1,80 +1,104 @@
-/* ============================================================
-   1. FIREBASE SETUP
-   ============================================================ */
-// 🔁 REPLACE THESE VALUES WITH YOUR REAL FIREBASE CONFIG
-const firebaseConfig = {
-    apiKey: "AIzaSyCTh8EPbEHbwj-dY2wClMUfuo551wZODgs",
-    authDomain: "school-house-points-de0a0.firebaseapp.com",
-    projectId: "school-house-points-de0a0",
-    storageBucket: "school-house-points-de0a0.firebasestorage.app",
-    messagingSenderId: "557412828404",
-    appId: "1:557412828404:web:d7a8f300780df81b6f4aa1"
-  };
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-/* ============================================================
-   2. GLOBALS & HELPERS
-   ============================================================ */
-
+const API_BASE_URL = "https://apps.leeuwenhof.co.za/api";
 const HOUSES = {
   houseA: { displayName: "Eerhof", logo: "house-a-logo.png" },
   houseB: { displayName: "Edelhof", logo: "house-b-logo.png" },
 };
 
 const $ = (id) => document.getElementById(id);
-
-let currentUser = null;
+let authToken = sessionStorage.getItem("accessToken");
 let currentProfile = null;
 
 function showSection(sectionId) {
   ["authSection", "learnerDashboard", "teacherDashboard"].forEach((id) => {
-    const el = $(id);
-    if (!el) return;
-    if (id === sectionId) el.classList.remove("hidden");
-    else el.classList.add("hidden");
+    const section = $(id);
+    if (section) section.classList.toggle("hidden", id !== sectionId);
   });
 }
 
-function showTeacherPanel(which) {
-  const eventsPanel = $("teacherEventsPanel");
-  const checkInPanel = $("teacherCheckInPanel");
-  const pointsPanel = $("teacherPointsPanel");
-
-  eventsPanel.classList.add("hidden");
-  checkInPanel.classList.add("hidden");
-  pointsPanel.classList.add("hidden");
-
-  if (which === "events") eventsPanel.classList.remove("hidden");
-  if (which === "checkin") checkInPanel.classList.remove("hidden");
-  if (which === "points") pointsPanel.classList.remove("hidden");
+function showAuthForm(which) {
+  $("loginForm").classList.toggle("hidden", which !== "login");
+  $("learnerRegisterForm").classList.toggle("hidden", which !== "learner");
+  $("showLogin").classList.toggle("is-active", which === "login");
+  $("showLogin").setAttribute("aria-pressed", String(which === "login"));
+  $("showLearnerRegister").classList.toggle("is-active", which === "learner");
+  $("showLearnerRegister").setAttribute("aria-pressed", String(which === "learner"));
 }
 
-/* ============================================================
-   3. AUTH STATE
-   ============================================================ */
+function clearSession() {
+  authToken = null;
+  currentProfile = null;
+  sessionStorage.removeItem("accessToken");
+  $("headerUserInfo").textContent = "";
+  showSection("authSection");
+  showAuthForm("login");
+}
 
-auth.onAuthStateChanged(async (user) => {
-  currentUser = user;
+async function api(path, { method = "GET", body, authenticated = true } = {}) {
+  const headers = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (authenticated && authToken) headers.Authorization = `Bearer ${authToken}`;
 
-  if (!user) {
-    currentProfile = null;
-    $("headerUserInfo").textContent = "";
-    showSection("authSection");
-    return;
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  let payload = null;
+  if (response.status !== 204) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      payload = await response.json();
+    } else {
+      payload = { error: "The API returned an unexpected response." };
+    }
   }
 
-  const docRef = db.collection("users").doc(user.uid);
-  const snap = await docRef.get();
-  if (!snap.exists) {
-    await auth.signOut();
-    return;
+  if (!response.ok) {
+    if (response.status === 401 && authenticated && authToken) {
+      clearSession();
+      $("loginError").textContent = "Your session expired. Please log in again.";
+    }
+    throw new Error(payload?.error || "The request could not be completed.");
   }
+  return payload;
+}
 
-  currentProfile = { id: snap.id, ...snap.data() };
-  $("headerUserInfo").textContent = `${currentProfile.name} ${currentProfile.surname} (${currentProfile.role})`;
+function setSession(result) {
+  authToken = result.token;
+  sessionStorage.setItem("accessToken", authToken);
+  currentProfile = result.user;
+}
+
+function addCell(row, value, className = "") {
+  const cell = document.createElement("td");
+  cell.textContent = value == null ? "" : String(value);
+  if (className) cell.className = className;
+  row.appendChild(cell);
+  return cell;
+}
+
+function setTableMessage(tbody, message, columnCount) {
+  tbody.replaceChildren();
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = columnCount;
+  cell.textContent = message;
+  row.appendChild(cell);
+  tbody.appendChild(row);
+}
+
+function houseInfo(houseCode) {
+  return HOUSES[houseCode] || {
+    displayName: "House",
+    logo: "house-a-logo.png",
+  };
+}
+
+async function showUserDashboard() {
+  $("headerUserInfo").textContent =
+    `${currentProfile.name} ${currentProfile.surname} (${currentProfile.role})`;
 
   if (currentProfile.role === "learner") {
     showSection("learnerDashboard");
@@ -82,25 +106,37 @@ auth.onAuthStateChanged(async (user) => {
   } else if (currentProfile.role === "teacher") {
     showSection("teacherDashboard");
     initTeacherDashboard();
+  } else {
+    clearSession();
+    throw new Error("This account has an unsupported role.");
   }
-});
+}
 
-/* ============================================================
-   4. INIT LISTENERS (DOM READY)
-   ============================================================ */
+async function restoreSession() {
+  if (!authToken) {
+    showSection("authSection");
+    showAuthForm("login");
+    return;
+  }
+
+  try {
+    const result = await api("/auth/me");
+    currentProfile = result.user;
+    await showUserDashboard();
+  } catch (error) {
+    if (!authToken) return;
+    showSection("authSection");
+    showAuthForm("login");
+    $("loginError").textContent = `Could not connect to the app API: ${error.message}`;
+  }
+}
 
 window.addEventListener("load", () => {
-  // Auth tabs
   $("showLogin").addEventListener("click", () => showAuthForm("login"));
   $("showLearnerRegister").addEventListener("click", () => showAuthForm("learner"));
-  $("showTeacherRegister").addEventListener("click", () => showAuthForm("teacher"));
-
-  // Auth forms
   $("loginForm").addEventListener("submit", handleLogin);
   $("learnerRegisterForm").addEventListener("submit", handleLearnerRegister);
-  $("teacherRegisterForm").addEventListener("submit", handleTeacherRegister);
 
-  // Teacher tabs
   $("tabEvents").addEventListener("click", () => {
     showTeacherPanel("events");
     loadTeacherEvents();
@@ -113,33 +149,91 @@ window.addEventListener("load", () => {
     showTeacherPanel("points");
     loadHousePoints();
   });
-
-  // Logout
-  $("logoutButton").addEventListener("click", () => auth.signOut());
-
-  // Event creation
+  $("learnerLogoutButton").addEventListener("click", handleLogout);
+  $("logoutButton").addEventListener("click", handleLogout);
   $("createEventForm").addEventListener("submit", handleCreateEvent);
 
-  // Check-in filters
   $("filterGrade").addEventListener("input", loadLearnersForCheckIn);
   $("filterHouse").addEventListener("change", loadLearnersForCheckIn);
   $("checkInEventSelect").addEventListener("change", loadLearnersForCheckIn);
+  $("filterName").addEventListener("input", loadLearnersForCheckIn);
 
-  // 🔍 NEW: name search filter
-  const nameInput = $("filterName");
-  if (nameInput) {
-    nameInput.addEventListener("input", loadLearnersForCheckIn);
-  }
+  restoreSession();
 });
 
-function showAuthForm(which) {
-  $("loginForm").classList.add("hidden");
-  $("learnerRegisterForm").classList.add("hidden");
-  $("teacherRegisterForm").classList.add("hidden");
+function showTeacherPanel(which) {
+  $("teacherEventsPanel").classList.toggle("hidden", which !== "events");
+  $("teacherCheckInPanel").classList.toggle("hidden", which !== "checkin");
+  $("teacherPointsPanel").classList.toggle("hidden", which !== "points");
+  const tabs = [
+    ["events", "tabEvents"],
+    ["checkin", "tabCheckIn"],
+    ["points", "tabPoints"],
+  ];
+  tabs.forEach(([panel, buttonId]) => {
+    $(buttonId).classList.toggle("is-active", panel === which);
+    $(buttonId).setAttribute("aria-pressed", String(panel === which));
+  });
+}
 
-  if (which === "login") $("loginForm").classList.remove("hidden");
-  if (which === "learner") $("learnerRegisterForm").classList.remove("hidden");
-  if (which === "teacher") $("teacherRegisterForm").classList.remove("hidden");
+async function handleLogin(event) {
+  event.preventDefault();
+  const errorEl = $("loginError");
+  errorEl.textContent = "";
+  try {
+    const result = await api(
+      "/auth/login",
+      {
+        method: "POST",
+        body: {
+          email: $("loginEmail").value.trim(),
+          password: $("loginPassword").value,
+        },
+        authenticated: false,
+      },
+    );
+    setSession(result);
+    await showUserDashboard();
+  } catch (error) {
+    errorEl.textContent = error.message || "Login failed.";
+  }
+}
+
+async function handleLearnerRegister(event) {
+  event.preventDefault();
+  const errorEl = $("learnerRegisterError");
+  errorEl.textContent = "";
+  try {
+    const result = await api(
+      "/auth/register-learner",
+      {
+        method: "POST",
+        body: {
+          name: $("learnerName").value.trim(),
+          surname: $("learnerSurname").value.trim(),
+          grade: $("learnerGrade").value,
+          house: $("learnerHouse").value,
+          email: $("learnerEmail").value.trim(),
+          password: $("learnerPassword").value,
+        },
+        authenticated: false,
+      },
+    );
+    setSession(result);
+    await showUserDashboard();
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not register learner.";
+  }
+}
+
+async function handleLogout() {
+  try {
+    await api("/auth/logout", { method: "POST" });
+  } catch (error) {
+    console.error("Could not end the server session:", error);
+  } finally {
+    clearSession();
+  }
 }
 
 function initTeacherDashboard() {
@@ -149,373 +243,218 @@ function initTeacherDashboard() {
   loadHousePoints();
 }
 
-/* ============================================================
-   5. AUTH HANDLERS
-   ============================================================ */
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const email = $("loginEmail").value.trim();
-  const password = $("loginPassword").value;
-  const errorEl = $("loginError");
-  errorEl.textContent = "";
-
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-  } catch (err) {
-    console.error(err);
-    errorEl.textContent = "Login failed. Please check your details.";
-  }
-}
-
-async function handleLearnerRegister(e) {
-  e.preventDefault();
-
-  const name = $("learnerName").value.trim();
-  const surname = $("learnerSurname").value.trim();
-  const grade = $("learnerGrade").value.trim();
-  const phone = $("learnerPhone").value.trim();
-  const house = $("learnerHouse").value;
-  const email = $("learnerEmail").value.trim();
-  const password = $("learnerPassword").value;
-  const errorEl = $("learnerRegisterError");
-  errorEl.textContent = "";
-
-  try {
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
-    await db.collection("users").doc(cred.user.uid).set({
-      name,
-      surname,
-      email,
-      grade,
-      phone,
-      house, // "houseA" / "houseB"
-      role: "learner",
-    });
-  } catch (err) {
-    console.error(err);
-    errorEl.textContent = "Could not register learner.";
-  }
-}
-
-async function handleTeacherRegister(e) {
-  e.preventDefault();
-
-  const name = $("teacherName").value.trim();
-  const surname = $("teacherSurname").value.trim();
-  const email = $("teacherEmail").value.trim();
-  const password = $("teacherPassword").value;
-  const errorEl = $("teacherRegisterError");
-  errorEl.textContent = "";
-
-  try {
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
-    await db.collection("users").doc(cred.user.uid).set({
-      name,
-      surname,
-      email,
-      role: "teacher",
-    });
-  } catch (err) {
-    console.error(err);
-    errorEl.textContent = "Could not register teacher.";
-  }
-}
-
-/* ============================================================
-   6. LEARNER DASHBOARD
-   ============================================================ */
-
 async function loadLearnerDashboard() {
   if (!currentProfile) return;
+  const info = $("learnerInfo");
+  const house = houseInfo(currentProfile.house);
+  info.replaceChildren();
 
-  const houseInfo = HOUSES[currentProfile.house] || {
-    displayName: "House",
-    logo: "house-a-logo.png",
-  };
-
-  $("learnerInfo").innerHTML = `
-    <div class="learner-header">
-      <img src="${houseInfo.logo}" class="house-logo-small" />
-      <div>
-        <div class="learner-name">${currentProfile.name} ${currentProfile.surname}</div>
-        <div class="learner-meta">Grade ${currentProfile.grade} – ${houseInfo.displayName}</div>
-      </div>
-    </div>
-  `;
+  const header = document.createElement("div");
+  header.className = "learner-header";
+  const logo = document.createElement("img");
+  logo.src = house.logo;
+  logo.alt = `${house.displayName} logo`;
+  logo.className = "house-logo-small";
+  const details = document.createElement("div");
+  const name = document.createElement("div");
+  name.className = "learner-name";
+  name.textContent = `${currentProfile.name} ${currentProfile.surname}`;
+  const meta = document.createElement("div");
+  meta.className = "learner-meta";
+  meta.textContent = `Grade ${currentProfile.grade} – ${house.displayName}`;
+  details.append(name, meta);
+  header.append(logo, details);
+  info.appendChild(header);
 
   await loadLearnerEvents();
 }
 
 async function loadLearnerEvents() {
   const tbody = document.querySelector("#learnerEventsTable tbody");
-  tbody.innerHTML = "";
-
+  setTableMessage(tbody, "Loading events...", 3);
   try {
-    // Load ALL events
-    const eventsSnap = await db.collection("events").orderBy("date").get();
-
-    if (eventsSnap.empty) {
-      tbody.innerHTML = `<tr><td colspan="3">No events yet.</td></tr>`;
-      return;
-    }
-
-    // Load attendance docs for THIS learner
-    const attSnap = await db
-      .collection("attendance")
-      .where("learnerId", "==", currentProfile.id)
-      .get();
-
-    const attendedEventIds = new Set();
-    attSnap.forEach((doc) => {
-      const data = doc.data();
-      if (data.eventId) attendedEventIds.add(data.eventId);
+    const { events } = await api("/learner/events");
+    if (!events.length) return setTableMessage(tbody, "No events yet.", 3);
+    tbody.replaceChildren();
+    events.forEach((event) => {
+      const row = document.createElement("tr");
+      addCell(row, event.name);
+      addCell(row, event.date);
+      addCell(row, event.checkedIn ? "Checked in" : "Not checked in");
+      tbody.appendChild(row);
     });
-
-    eventsSnap.forEach((doc) => {
-      const ev = doc.data();
-      const hasAttendance = attendedEventIds.has(doc.id);
-      const status = hasAttendance ? "Checked in" : "Not checked in";
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${ev.name}</td>
-        <td>${ev.date || ""}</td>
-        <td>${status}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error("Error loading learner events:", err);
-    tbody.innerHTML = `<tr><td colspan="3">Error loading events.</td></tr>`;
+  } catch (error) {
+    setTableMessage(tbody, `Error loading events: ${error.message}`, 3);
   }
 }
 
-/* ============================================================
-   7. TEACHER – EVENTS
-   ============================================================ */
-
-async function handleCreateEvent(e) {
-  e.preventDefault();
+async function handleCreateEvent(event) {
+  event.preventDefault();
+  const errorEl = $("createEventError");
+  errorEl.textContent = "";
   const name = $("eventName").value.trim();
   const date = $("eventDate").value;
-
-  if (!name || !date) return;
-
-  await db.collection("events").add({
-    name,
-    date,
-    active: true,
-  });
-
-  $("eventName").value = "";
-  $("eventDate").value = "";
-
-  loadTeacherEvents();
-  loadCheckInEventSelect();
+  try {
+    await api("/events", { method: "POST", body: { name, date } });
+    $("eventName").value = "";
+    $("eventDate").value = "";
+    await Promise.all([loadTeacherEvents(), loadCheckInEventSelect()]);
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not create event.";
+  }
 }
 
 async function loadTeacherEvents() {
   const tbody = document.querySelector("#teacherEventsTable tbody");
-  tbody.innerHTML = "";
-
-  const snap = await db.collection("events").orderBy("date").get();
-
-  snap.forEach((doc) => {
-    const ev = doc.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${ev.name}</td>
-      <td>${ev.date}</td>
-      <td>${ev.active ? "Active" : "Closed"}</td>
-      <td>
-        <button class="btn btn-primary btn-sm" onclick="toggleEvent('${doc.id}', ${!!ev.active})">
-          ${ev.active ? "Close" : "Open"}
-        </button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteEvent('${doc.id}')">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  setTableMessage(tbody, "Loading events...", 4);
+  try {
+    const { events } = await api("/events");
+    if (!events.length) return setTableMessage(tbody, "No events yet.", 4);
+    tbody.replaceChildren();
+    events.forEach((event) => {
+      const row = document.createElement("tr");
+      addCell(row, event.name);
+      addCell(row, event.date);
+      addCell(row, event.active ? "Active" : "Closed");
+      const actions = document.createElement("td");
+      const toggleButton = document.createElement("button");
+      toggleButton.className = "btn btn-primary btn-sm";
+      toggleButton.textContent = event.active ? "Close" : "Open";
+      toggleButton.addEventListener("click", () => toggleEvent(event.id, !event.active));
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "btn btn-ghost btn-sm";
+      deleteButton.textContent = "Delete";
+      deleteButton.addEventListener("click", () => deleteEvent(event.id));
+      actions.append(toggleButton, deleteButton);
+      row.appendChild(actions);
+      tbody.appendChild(row);
+    });
+  } catch (error) {
+    setTableMessage(tbody, `Error loading events: ${error.message}`, 4);
+  }
 }
 
-async function toggleEvent(id, isActive) {
-  await db.collection("events").doc(id).update({ active: !isActive });
-  loadTeacherEvents();
-  loadCheckInEventSelect();
+async function toggleEvent(id, active) {
+  try {
+    await api(`/events/${encodeURIComponent(id)}`, { method: "PATCH", body: { active } });
+    await Promise.all([loadTeacherEvents(), loadCheckInEventSelect()]);
+  } catch (error) {
+    window.alert(`Could not update event: ${error.message}`);
+  }
 }
-window.toggleEvent = toggleEvent;
 
 async function deleteEvent(id) {
-  if (!confirm("Delete this event?")) return;
-  await db.collection("events").doc(id).delete();
-  loadTeacherEvents();
-  loadCheckInEventSelect();
+  if (!window.confirm("Delete this event and its attendance?")) return;
+  try {
+    await api(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
+    await Promise.all([loadTeacherEvents(), loadCheckInEventSelect(), loadHousePoints()]);
+  } catch (error) {
+    window.alert(`Could not delete event: ${error.message}`);
+  }
 }
-window.deleteEvent = deleteEvent;
-
-/* ============================================================
-   8. TEACHER – CHECK-IN
-   ============================================================ */
 
 async function loadCheckInEventSelect() {
   const select = $("checkInEventSelect");
-  if (!select) return;
-
+  const tbody = document.querySelector("#checkInLearnersTable tbody");
+  select.replaceChildren();
   try {
-    const snap = await db.collection("events").orderBy("date").get();
-
-    select.innerHTML = "";
-
-    if (snap.empty) {
-      const opt = document.createElement("option");
-      opt.value = "";
-      opt.textContent = "No events yet";
-      select.appendChild(opt);
-
-      const tbody = document.querySelector("#checkInLearnersTable tbody");
-      tbody.innerHTML = `<tr><td colspan="4">No events available.</td></tr>`;
+    const { events } = await api("/events");
+    const activeEvents = events.filter((event) => event.active);
+    if (!activeEvents.length) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "No active events";
+      select.appendChild(option);
+      setTableMessage(tbody, "No active events available.", 4);
       return;
     }
-
-    snap.forEach((doc) => {
-      const ev = doc.data();
-      const opt = document.createElement("option");
-      opt.value = doc.id;
-      opt.textContent = `${ev.name} (${ev.date})`;
-      select.appendChild(opt);
+    activeEvents.forEach((event) => {
+      const option = document.createElement("option");
+      option.value = event.id;
+      option.textContent = `${event.name} (${event.date})`;
+      select.appendChild(option);
     });
-
-    loadLearnersForCheckIn();
-  } catch (err) {
-    console.error("Error loading events for check-in:", err);
-    select.innerHTML = "";
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "Error loading events";
-    select.appendChild(opt);
-
-    const tbody = document.querySelector("#checkInLearnersTable tbody");
-    tbody.innerHTML = `<tr><td colspan="4">Error loading events.</td></tr>`;
+    await loadLearnersForCheckIn();
+  } catch (error) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Error loading events";
+    select.appendChild(option);
+    setTableMessage(tbody, `Error loading events: ${error.message}`, 4);
   }
 }
 
 async function loadLearnersForCheckIn() {
-  const eventID = $("checkInEventSelect").value;
+  const eventId = $("checkInEventSelect").value;
   const tbody = document.querySelector("#checkInLearnersTable tbody");
-  tbody.innerHTML = "";
+  if (!eventId) return setTableMessage(tbody, "No active event selected.", 4);
 
-  if (!eventID) {
-    tbody.innerHTML = `<tr><td colspan="4">No events selected.</td></tr>`;
-    return;
-  }
+  const query = new URLSearchParams({ eventId });
+  const grade = $("filterGrade").value.trim();
+  const house = $("filterHouse").value;
+  const name = $("filterName").value.trim();
+  if (grade) query.set("grade", grade);
+  if (house) query.set("house", house);
+  if (name) query.set("name", name);
 
-  const filterGrade = $("filterGrade").value.trim();
-  const filterHouse = $("filterHouse").value;
-  const filterName = ($("filterName")?.value || "").trim().toLowerCase(); // 🔍 NEW
-
+  setTableMessage(tbody, "Loading learners...", 4);
   try {
-    // Get all learners
-    const usersSnap = await db
-      .collection("users")
-      .where("role", "==", "learner")
-      .get();
+    const { learners } = await api(`/learners?${query.toString()}`);
+    if (!learners.length) return setTableMessage(tbody, "No learners found.", 4);
+    tbody.replaceChildren();
+    learners.forEach((learner) => {
+      const row = document.createElement("tr");
+      addCell(row, `${learner.name} ${learner.surname}`);
+      addCell(row, learner.grade);
+      const houseCell = document.createElement("td");
+      houseCell.className = "house-cell";
+      const house = houseInfo(learner.house);
+      const logo = document.createElement("img");
+      logo.src = house.logo;
+      logo.alt = "";
+      logo.className = "house-logo-small";
+      houseCell.append(logo, document.createTextNode(house.displayName));
+      row.appendChild(houseCell);
 
-    let learners = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-    if (filterGrade) {
-      learners = learners.filter((l) => String(l.grade) === filterGrade);
-    }
-
-    if (filterHouse) {
-      learners = learners.filter((l) => l.house === filterHouse);
-    }
-
-    if (filterName) {
-      learners = learners.filter((l) => {
-        const fullName = `${l.name || ""} ${l.surname || ""}`.toLowerCase();
-        return fullName.includes(filterName);
-      });
-    }
-
-    const attSnap = await db
-      .collection("attendance")
-      .where("eventId", "==", eventID)
-      .get();
-    const attendance = attSnap.docs.map((d) => d.data());
-
-    if (!learners.length) {
-      tbody.innerHTML = `<tr><td colspan="4">No learners found.</td></tr>`;
-      return;
-    }
-
-    learners.forEach((l) => {
-      const checked = attendance.some((a) => a.learnerId === l.id);
-      const houseInfo = HOUSES[l.house] || {
-        displayName: "House",
-        logo: "house-a-logo.png",
-      };
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${l.name} ${l.surname}</td>
-        <td>${l.grade}</td>
-        <td class="house-cell">
-          <img src="${houseInfo.logo}" class="house-logo-small" />
-          ${houseInfo.displayName}
-        </td>
-        <td>
-          ${
-            checked
-              ? '<span class="chip-status chip-ok">Checked in</span>'
-              : `<button class="btn btn-primary btn-sm" onclick="checkIn('${l.id}','${eventID}')">Check in</button>`
-          }
-        </td>
-      `;
-      tbody.appendChild(tr);
+      const status = document.createElement("td");
+      if (learner.checkedIn) {
+        const chip = document.createElement("span");
+        chip.className = "chip-status chip-ok";
+        chip.textContent = "Checked in";
+        status.appendChild(chip);
+      } else {
+        const button = document.createElement("button");
+        button.className = "btn btn-primary btn-sm";
+        button.textContent = "Check in";
+        button.addEventListener("click", () => checkIn(learner.id, eventId));
+        status.appendChild(button);
+      }
+      row.appendChild(status);
+      tbody.appendChild(row);
     });
-  } catch (err) {
-    console.error("Error loading learners for check-in:", err);
-    tbody.innerHTML = `<tr><td colspan="4">Error loading learners.</td></tr>`;
+  } catch (error) {
+    setTableMessage(tbody, `Error loading learners: ${error.message}`, 4);
   }
 }
 
-async function checkIn(uid, eventID) {
-  const userDoc = await db.collection("users").doc(uid).get();
-  const user = userDoc.data();
-
-  await db.collection("attendance").doc(`${eventID}_${uid}`).set({
-    learnerId: uid,
-    eventId: eventID,
-    learnerName: user.name,
-    learnerSurname: user.surname,
-    house: user.house,
-    grade: user.grade,
-    timestamp: new Date().toISOString(),
-  });
-
-  await db
-    .collection("points")
-    .doc(user.house)
-    .set(
-      {
-        total: firebase.firestore.FieldValue.increment(1),
-      },
-      { merge: true }
-    );
-
-  loadLearnersForCheckIn();
+async function checkIn(learnerId, eventId) {
+  try {
+    await api("/attendance", { method: "POST", body: { learnerId, eventId } });
+    await Promise.all([loadLearnersForCheckIn(), loadHousePoints()]);
+  } catch (error) {
+    window.alert(`Could not check in learner: ${error.message}`);
+  }
 }
-window.checkIn = checkIn;
-
-/* ============================================================
-   9. TEACHER – HOUSE POINTS
-   ============================================================ */
 
 async function loadHousePoints() {
-  const aDoc = await db.collection("points").doc("houseA").get();
-  const bDoc = await db.collection("points").doc("houseB").get();
-
-  $("houseAPoints").innerText = aDoc.exists ? aDoc.data().total : 0;
-  $("houseBPoints").innerText = bDoc.exists ? bDoc.data().total : 0;
+  try {
+    const { points } = await api("/house-points");
+    const totals = new Map(points.map((point) => [point.house, point.total]));
+    $("houseAPoints").textContent = String(totals.get("houseA") || 0);
+    $("houseBPoints").textContent = String(totals.get("houseB") || 0);
+  } catch (error) {
+    $("houseAPoints").textContent = "—";
+    $("houseBPoints").textContent = "—";
+    console.error("Could not load house points:", error);
+  }
 }

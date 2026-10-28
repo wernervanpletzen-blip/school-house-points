@@ -1,0 +1,17 @@
+services:
+  house-points-api:
+    build:
+      context: ./school-house-points
+      dockerfile: api/Dockerfile
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      FRONTEND_ORIGIN: https://rexxar4-wq.github.io
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: school_house_points
+      DB_USER: ${HOUSE_POINTS_DB_USER:?Set HOUSE_POINTS_DB_USER in the stack .env file}
+      DB_PASSWORD: ${HOUSE_POINTS_DB_PASSWORD:?Set HOUSE_POINTS_DB_PASSWORD in the stack .env file}
+      SESSION_HOURS: 12
+    restart: unless-stopped
