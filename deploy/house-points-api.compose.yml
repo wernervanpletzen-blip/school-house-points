@@ -7,7 +7,7 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 3000
-      FRONTEND_ORIGIN: https://rexxar4-wq.github.io
+      FRONTEND_ORIGIN: https://wernervanpletzen-blip.github.io
       DB_HOST: mariadb
       DB_PORT: 3306
       DB_NAME: school_house_points
