@@ -9,7 +9,13 @@ let authToken = sessionStorage.getItem("accessToken");
 let currentProfile = null;
 
 function showSection(sectionId) {
-  ["authSection", "learnerDashboard", "teacherDashboard"].forEach((id) => {
+  [
+    "authSection",
+    "learnerDashboard",
+    "passwordChangeSection",
+    "adminDashboard",
+    "teacherDashboard",
+  ].forEach((id) => {
     const section = $(id);
     if (section) section.classList.toggle("hidden", id !== sectionId);
   });
@@ -60,7 +66,9 @@ async function api(path, { method = "GET", body, authenticated = true } = {}) {
       clearSession();
       $("loginError").textContent = "Your session expired. Please log in again.";
     }
-    throw new Error(payload?.error || "The request could not be completed.");
+    const error = new Error(payload?.error || "The request could not be completed.");
+    error.code = payload?.code;
+    throw error;
   }
   return payload;
 }
@@ -100,12 +108,21 @@ async function showUserDashboard() {
   $("headerUserInfo").textContent =
     `${currentProfile.name} ${currentProfile.surname} (${currentProfile.role})`;
 
+  if (currentProfile.mustChangePassword) {
+    showSection("passwordChangeSection");
+    $("currentPassword").focus();
+    return;
+  }
+
   if (currentProfile.role === "learner") {
     showSection("learnerDashboard");
     await loadLearnerDashboard();
   } else if (currentProfile.role === "teacher") {
     showSection("teacherDashboard");
     initTeacherDashboard();
+  } else if (currentProfile.role === "administrator") {
+    showSection("adminDashboard");
+    initAdminDashboard();
   } else {
     clearSession();
     throw new Error("This account has an unsupported role.");
@@ -145,13 +162,23 @@ window.addEventListener("load", () => {
     showTeacherPanel("checkin");
     loadCheckInEventSelect();
   });
-  $("tabPoints").addEventListener("click", () => {
-    showTeacherPanel("points");
-    loadHousePoints();
-  });
   $("learnerLogoutButton").addEventListener("click", handleLogout);
   $("logoutButton").addEventListener("click", handleLogout);
+  $("passwordChangeLogout").addEventListener("click", handleLogout);
+  $("passwordChangeForm").addEventListener("submit", handlePasswordChange);
   $("createEventForm").addEventListener("submit", handleCreateEvent);
+  $("adminTabUsers").addEventListener("click", () => showAdminPanel("users"));
+  $("adminTabPoints").addEventListener("click", () => {
+    showAdminPanel("points");
+    loadHousePoints();
+  });
+  $("adminLogoutButton").addEventListener("click", handleLogout);
+  $("adminCreateTeacherForm").addEventListener("submit", handleAdminCreateTeacher);
+  $("adminUserSearch").addEventListener("input", renderAdminUsers);
+  $("editAccountForm").addEventListener("submit", handleEditAccount);
+  $("cancelEditAccount").addEventListener("click", () => $("editAccountDialog").close());
+  $("resetPasswordForm").addEventListener("submit", handleAdminResetPassword);
+  $("cancelResetPassword").addEventListener("click", () => $("resetPasswordDialog").close());
 
   $("filterGrade").addEventListener("input", loadLearnersForCheckIn);
   $("filterHouse").addEventListener("change", loadLearnersForCheckIn);
@@ -164,11 +191,9 @@ window.addEventListener("load", () => {
 function showTeacherPanel(which) {
   $("teacherEventsPanel").classList.toggle("hidden", which !== "events");
   $("teacherCheckInPanel").classList.toggle("hidden", which !== "checkin");
-  $("teacherPointsPanel").classList.toggle("hidden", which !== "points");
   const tabs = [
     ["events", "tabEvents"],
     ["checkin", "tabCheckIn"],
-    ["points", "tabPoints"],
   ];
   tabs.forEach(([panel, buttonId]) => {
     $(buttonId).classList.toggle("is-active", panel === which);
@@ -196,6 +221,29 @@ async function handleLogin(event) {
     await showUserDashboard();
   } catch (error) {
     errorEl.textContent = error.message || "Login failed.";
+  }
+}
+
+async function handlePasswordChange(event) {
+  event.preventDefault();
+  const errorEl = $("passwordChangeError");
+  errorEl.textContent = "";
+  const currentPassword = $("currentPassword").value;
+  const newPassword = $("newPassword").value;
+  if (newPassword !== $("confirmNewPassword").value) {
+    errorEl.textContent = "The new passwords do not match.";
+    return;
+  }
+  try {
+    await api("/auth/change-password", {
+      method: "POST",
+      body: { currentPassword, newPassword },
+    });
+    $("passwordChangeForm").reset();
+    currentProfile.mustChangePassword = false;
+    await showUserDashboard();
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not update password.";
   }
 }
 
@@ -240,7 +288,165 @@ function initTeacherDashboard() {
   showTeacherPanel("events");
   loadTeacherEvents();
   loadCheckInEventSelect();
-  loadHousePoints();
+}
+
+let adminUsers = [];
+
+function showAdminPanel(which) {
+  $("adminUsersPanel").classList.toggle("hidden", which !== "users");
+  $("adminPointsPanel").classList.toggle("hidden", which !== "points");
+  $("adminTabUsers").classList.toggle("is-active", which === "users");
+  $("adminTabUsers").setAttribute("aria-pressed", String(which === "users"));
+  $("adminTabPoints").classList.toggle("is-active", which === "points");
+  $("adminTabPoints").setAttribute("aria-pressed", String(which === "points"));
+}
+
+function initAdminDashboard() {
+  showAdminPanel("users");
+  loadAdminUsers();
+}
+
+async function loadAdminUsers() {
+  const tbody = document.querySelector("#adminUsersTable tbody");
+  const errorEl = $("adminUsersError");
+  errorEl.textContent = "";
+  setTableMessage(tbody, "Loading accounts...", 5);
+  try {
+    const result = await api("/admin/users");
+    adminUsers = result.users;
+    renderAdminUsers();
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not load accounts.";
+    setTableMessage(tbody, "Accounts could not be loaded.", 5);
+  }
+}
+
+function renderAdminUsers() {
+  const tbody = document.querySelector("#adminUsersTable tbody");
+  const search = $("adminUserSearch").value.trim().toLowerCase();
+  const filtered = adminUsers.filter((user) =>
+    `${user.name} ${user.surname} ${user.email} ${user.role}`.toLowerCase().includes(search),
+  );
+  if (!filtered.length) return setTableMessage(tbody, "No matching accounts.", 5);
+  tbody.replaceChildren();
+
+  filtered.forEach((user) => {
+    const row = document.createElement("tr");
+    addCell(row, `${user.name} ${user.surname}`);
+    addCell(row, user.role === "administrator" ? "Administrator" : user.role);
+    addCell(row, user.email);
+    addCell(
+      row,
+      user.role === "learner"
+        ? `Grade ${user.grade} · ${houseInfo(user.house).displayName}`
+        : "—",
+    );
+
+    const actions = document.createElement("td");
+    const editButton = document.createElement("button");
+    editButton.className = "btn btn-ghost btn-sm";
+    editButton.type = "button";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", () => openEditAccount(user));
+    const resetButton = document.createElement("button");
+    resetButton.className = "btn btn-ghost btn-sm";
+    resetButton.type = "button";
+    resetButton.textContent = "Reset password";
+    resetButton.addEventListener("click", () => openResetPassword(user));
+    actions.append(editButton, resetButton);
+    row.appendChild(actions);
+    tbody.appendChild(row);
+  });
+}
+
+async function handleAdminCreateTeacher(event) {
+  event.preventDefault();
+  const errorEl = $("adminCreateTeacherError");
+  errorEl.textContent = "";
+  try {
+    await api("/admin/teachers", {
+      method: "POST",
+      body: {
+        name: $("adminTeacherName").value.trim(),
+        surname: $("adminTeacherSurname").value.trim(),
+        email: $("adminTeacherEmail").value.trim(),
+        temporaryPassword: $("adminTeacherPassword").value,
+      },
+    });
+    $("adminCreateTeacherForm").reset();
+    await loadAdminUsers();
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not create teacher account.";
+  }
+}
+
+function openEditAccount(user) {
+  $("editAccountId").value = user.id;
+  $("editAccountRole").value = user.role;
+  $("editAccountName").value = user.name;
+  $("editAccountSurname").value = user.surname;
+  $("editAccountEmail").value = user.email;
+  $("editAccountGrade").value = user.grade ?? "";
+  $("editAccountHouse").value = user.house || "houseA";
+  $("editLearnerFields").classList.toggle("hidden", user.role !== "learner");
+  $("editAccountGrade").required = user.role === "learner";
+  $("editAccountError").textContent = "";
+  $("editAccountDialog").showModal();
+}
+
+async function handleEditAccount(event) {
+  event.preventDefault();
+  const userId = $("editAccountId").value;
+  const role = $("editAccountRole").value;
+  const errorEl = $("editAccountError");
+  errorEl.textContent = "";
+  const body = {
+    name: $("editAccountName").value.trim(),
+    surname: $("editAccountSurname").value.trim(),
+    email: $("editAccountEmail").value.trim(),
+  };
+  if (role === "learner") {
+    body.grade = $("editAccountGrade").value;
+    body.house = $("editAccountHouse").value;
+  }
+  try {
+    await api(`/admin/users/${encodeURIComponent(userId)}`, { method: "PATCH", body });
+    $("editAccountDialog").close();
+    await loadAdminUsers();
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not update account.";
+  }
+}
+
+function openResetPassword(user) {
+  $("resetPasswordUserId").value = user.id;
+  $("resetTemporaryPassword").value = "";
+  $("resetPasswordError").textContent = "";
+  $("resetPasswordDialog").showModal();
+}
+
+async function handleAdminResetPassword(event) {
+  event.preventDefault();
+  const errorEl = $("resetPasswordError");
+  errorEl.textContent = "";
+  const userId = $("resetPasswordUserId").value;
+  const isCurrentUser = userId === currentProfile.id;
+  try {
+    await api(`/admin/users/${encodeURIComponent(userId)}/password`, {
+      method: "PUT",
+      body: { temporaryPassword: $("resetTemporaryPassword").value },
+    });
+    $("resetPasswordDialog").close();
+    $("resetPasswordForm").reset();
+    if (isCurrentUser) clearSession();
+    window.alert(
+      isCurrentUser
+        ? "Password reset. Sign in again with the temporary password and choose a new one."
+        : "Password reset. The user must change it when they next sign in.",
+    );
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not reset password.";
+  }
 }
 
 async function loadLearnerDashboard() {
@@ -347,7 +553,7 @@ async function deleteEvent(id) {
   if (!window.confirm("Delete this event and its attendance?")) return;
   try {
     await api(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
-    await Promise.all([loadTeacherEvents(), loadCheckInEventSelect(), loadHousePoints()]);
+    await Promise.all([loadTeacherEvents(), loadCheckInEventSelect()]);
   } catch (error) {
     window.alert(`Could not delete event: ${error.message}`);
   }
@@ -440,7 +646,7 @@ async function loadLearnersForCheckIn() {
 async function checkIn(learnerId, eventId) {
   try {
     await api("/attendance", { method: "POST", body: { learnerId, eventId } });
-    await Promise.all([loadLearnersForCheckIn(), loadHousePoints()]);
+    await loadLearnersForCheckIn();
   } catch (error) {
     window.alert(`Could not check in learner: ${error.message}`);
   }
@@ -450,11 +656,11 @@ async function loadHousePoints() {
   try {
     const { points } = await api("/house-points");
     const totals = new Map(points.map((point) => [point.house, point.total]));
-    $("houseAPoints").textContent = String(totals.get("houseA") || 0);
-    $("houseBPoints").textContent = String(totals.get("houseB") || 0);
+    $("adminHouseAPoints").textContent = String(totals.get("houseA") || 0);
+    $("adminHouseBPoints").textContent = String(totals.get("houseB") || 0);
   } catch (error) {
-    $("houseAPoints").textContent = "—";
-    $("houseBPoints").textContent = "—";
-    console.error("Could not load house points:", error);
+    $("adminHouseAPoints").textContent = "—";
+    $("adminHouseBPoints").textContent = "—";
+    $("adminPointsError").textContent = error.message || "Could not load house points.";
   }
 }
