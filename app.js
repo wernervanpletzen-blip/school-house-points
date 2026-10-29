@@ -183,6 +183,7 @@ window.addEventListener("load", () => {
   $("adminLogoutButton").addEventListener("click", handleLogout);
   $("adminCreateTeacherForm").addEventListener("submit", handleAdminCreateTeacher);
   $("adminUserSearch").addEventListener("input", renderAdminUsers);
+  $("editAccountRole").addEventListener("change", updateEditLearnerFields);
   $("editAccountForm").addEventListener("submit", handleEditAccount);
   $("cancelEditAccount").addEventListener("click", () => $("editAccountDialog").close());
   $("resetPasswordForm").addEventListener("submit", handleAdminResetPassword);
@@ -395,15 +396,23 @@ async function handleAdminCreateTeacher(event) {
 function openEditAccount(user) {
   $("editAccountId").value = user.id;
   $("editAccountRole").value = user.role;
+  const isCurrentUser = user.id === currentProfile.id;
+  $("editAccountRole").disabled = isCurrentUser;
+  $("editAccountRoleNote").classList.toggle("hidden", !isCurrentUser);
   $("editAccountName").value = user.name;
   $("editAccountSurname").value = user.surname;
   $("editAccountEmail").value = user.email;
   $("editAccountGrade").value = user.grade ?? "";
   $("editAccountHouse").value = user.house || "houseA";
-  $("editLearnerFields").classList.toggle("hidden", user.role !== "learner");
-  $("editAccountGrade").required = user.role === "learner";
+  updateEditLearnerFields();
   $("editAccountError").textContent = "";
   $("editAccountDialog").showModal();
+}
+
+function updateEditLearnerFields() {
+  const isLearner = $("editAccountRole").value === "learner";
+  $("editLearnerFields").classList.toggle("hidden", !isLearner);
+  $("editAccountGrade").required = isLearner;
 }
 
 async function handleEditAccount(event) {
@@ -413,6 +422,7 @@ async function handleEditAccount(event) {
   const errorEl = $("editAccountError");
   errorEl.textContent = "";
   const body = {
+    role,
     name: $("editAccountName").value.trim(),
     surname: $("editAccountSurname").value.trim(),
     email: $("editAccountEmail").value.trim(),
