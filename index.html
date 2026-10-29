@@ -265,7 +265,15 @@
           <form class="form-grid" id="editAccountForm">
             <h2 class="section-title" id="editAccountTitle">Edit account</h2>
             <input id="editAccountId" type="hidden" />
-            <input id="editAccountRole" type="hidden" />
+            <div>
+              <label class="label" for="editAccountRole">Role</label>
+              <select class="select" id="editAccountRole" required>
+                <option value="learner">Learner</option>
+                <option value="teacher">Teacher</option>
+                <option value="administrator">Administrator</option>
+              </select>
+              <p class="card-subtitle hidden" id="editAccountRoleNote">You cannot change your own administrator role.</p>
+            </div>
             <div>
               <label class="label" for="editAccountName">First name</label>
               <input class="input" id="editAccountName" required />
